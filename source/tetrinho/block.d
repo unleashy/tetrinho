@@ -9,18 +9,14 @@ import tetrinho.util;
 final class Block
 {
     immutable Color color;
+    Coord coords;
+    bool inFormation;
 
-    @RefRead
-    private Coord coords_;
-
-    @(ConstRead, Write)
-    private bool inFormation_;
-
-    this(in Color c, in Coord coords, in bool inFormation) @safe @nogc
+    this(in Color c, in Coord crds, in bool inF) @safe @nogc
     {
-        color  = c;
-        coords_ = coords;
-        inFormation_ = inFormation;
+        color       = c;
+        coords      = crds;
+        inFormation = inF;
     }
 
     mixin(GenerateFieldAccessors);
