@@ -2,6 +2,10 @@ module tetrinho.util;
 
 import derelict.sdl2.sdl;
 
+import std.typecons;
+
+alias Coord = Tuple!(int, "x", int, "y");
+
 T enforceSDL(alias cmp = "a == 0", T)(T a, lazy string message = "SDL error: %s") @trusted
 {
     import std.functional : unaryFun;
