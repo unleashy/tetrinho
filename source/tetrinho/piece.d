@@ -22,6 +22,14 @@ struct Piece
     {
         color = clr;
         blockLayout_ = blockLayout;
+        blocks_ = [
+            new Block(clr, Coord(0, 0), true),
+            new Block(clr, Coord(0, 0), true),
+            new Block(clr, Coord(0, 0), true),
+            new Block(clr, Coord(0, 0), true)
+        ];
+
+        injectLayout();
     }
 
     ~this() @safe
@@ -36,5 +44,29 @@ struct Piece
     void spawnPiece(ref Playfield p) @safe
     {
         p.add(blocks_);
+    }
+
+    void move(in Coord d) @safe
+    {
+        coord_.x += d.x;
+        coord_.y += d.y;
+
+        injectLayout();
+    }
+
+    private void injectLayout() @safe
+    {
+        size_t i;
+
+        foreach (const ly, const row; blockLayout_) {
+            foreach (const lx, const hasBlock; row) {
+                if (hasBlock) {
+                    blocks_[i].coords.x = coord_.x + lx;
+                    blocks_[i].coords.y = coord_.y + ly;
+
+                    ++i;
+                }
+            }
+        }
     }
 }
