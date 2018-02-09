@@ -2,9 +2,17 @@ module tetrinho.game;
 
 import derelict.sdl2.sdl;
 
-import tetrinho.graphics;
+import tetrinho.util,
+       tetrinho.graphics;
 
 enum uint MS_PER_UPDATE = 16;
+
+enum KeyState
+{
+    KEY_DOWN,
+    KEY_REPEAT,
+    KEY_UP
+}
 
 struct Game
 {
@@ -40,7 +48,16 @@ struct Game
                         running_ = false;
                         break;
 
-                    /* TODO: input */
+                    case SDL_KEYDOWN:
+                        handleInput(
+                            e.key.keysym.scancode,
+                            e.key.repeat ? KeyState.KEY_REPEAT : KeyState.KEY_DOWN
+                        );
+                        break;
+
+                    case SDL_KEYUP:
+                        handleInput(e.key.keysym.scancode, KeyState.KEY_UP);
+                        break;
 
                     default: break;
                 }
@@ -62,12 +79,19 @@ struct Game
         }
     }
 
-    void update()
+    private void handleInput(in SDL_Scancode sc, in KeyState state)
+    {
+        if (state == KeyState.KEY_DOWN && sc == SDL_SCANCODE_ESCAPE) {
+            running_ = false;
+        }
+    }
+
+    private void update()
     {
         /* TODO: update */
     }
 
-    void draw()
+    private void draw()
     {
         graphics_.renderClear();
 
