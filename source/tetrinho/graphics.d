@@ -40,7 +40,7 @@ struct Graphics
         );
 
         g.renderer_ = enforceSDL!"a !is null"(
-            SDL_CreateRenderer(window_, -1, cast(SDL_RendererFlags) 0)
+            SDL_CreateRenderer(g.window_, -1, cast(SDL_RendererFlags) 0)
         );
 
         immutable path = buildPath(dirName(thisExePath()), `VCR_OSD_MONO.ttf`).toStringz;

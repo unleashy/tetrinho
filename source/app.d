@@ -17,5 +17,5 @@ void main()
     enforceSDL(TTF_Init());
     scope(exit) TTF_Quit();
 
-
+    Game().run();
 }
