@@ -4,8 +4,9 @@ import derelict.sdl2.sdl;
 
 import std.typecons;
 
-alias Coord = Tuple!(int, "x", int, "y");
-alias Color = Tuple!(ubyte, "r", ubyte, "b", ubyte, "g");
+alias Coord = SDL_Point;
+alias Rect  = SDL_Rect;
+alias Color = SDL_Color;
 
 enum Colors : Color
 {
