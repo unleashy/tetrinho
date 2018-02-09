@@ -114,6 +114,35 @@ struct Graphics
         );
     }
 
+    void renderRect(Color color, in Rect rect)
+    {
+        // if alpha is zero, change it to SDL_ALPHA_OPAQUE;
+        // we'll never want to draw a fully transparent thing
+        if (color.a == 0) {
+            color.a = SDL_ALPHA_OPAQUE;
+        }
+
+        SDL_SetRenderDrawColor(renderer_, color.tupleof);
+        SDL_RenderFillRect(renderer_, &rect);
+    }
+
+    void renderLine(in Coord start, in Coord end)
+    {
+        SDL_RenderDrawLine(renderer_, start.tupleof, end.tupleof);
+    }
+
+    void setRenderStyle(Color color, in SDL_BlendMode blendMode = SDL_BLENDMODE_NONE)
+    {
+        // if alpha is zero, change it to SDL_ALPHA_OPAQUE;
+        // we'll never want to draw a fully transparent thing
+        if (color.a == 0) {
+            color.a = SDL_ALPHA_OPAQUE;
+        }
+
+        SDL_SetRenderDrawColor(renderer_, color.tupleof);
+        SDL_SetRenderDrawBlendMode(renderer_, blendMode);
+    }
+
     private void setRenderClearColor()
     {
         SDL_SetRenderDrawColor(renderer_, 60, 100, 175, SDL_ALPHA_OPAQUE);
