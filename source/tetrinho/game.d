@@ -3,7 +3,9 @@ module tetrinho.game;
 import derelict.sdl2.sdl;
 
 import tetrinho.util,
-       tetrinho.graphics;
+       tetrinho.graphics,
+       tetrinho.playfield,
+       tetrinho.block;
 
 enum uint MS_PER_UPDATE = 16;
 
@@ -17,13 +19,15 @@ enum KeyState
 struct Game
 {
     private Graphics graphics_;
-    private bool running_ = false;
+    private Playfield playfield_;
+    private bool running_;
 
     static Game opCall()
     {
         Game g;
 
-        g.graphics_ = Graphics();
+        g.graphics_  = Graphics();
+        g.playfield_ = Playfield();
 
         return g;
     }
@@ -95,7 +99,7 @@ struct Game
     {
         graphics_.renderClear();
 
-        /* TODO: draw */
+        playfield_.draw(graphics_);
 
         graphics_.renderPresent();
     }
