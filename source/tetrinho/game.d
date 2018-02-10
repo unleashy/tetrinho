@@ -100,7 +100,7 @@ struct Game
 
     private void handleInput(in SDL_Scancode sc, in KeyState state)
     {
-        if (state == KeyState.KEY_DOWN) {
+        if (state == KeyState.KEY_DOWN || state == KeyState.KEY_REPEAT) {
             switch (sc) {
                 case SDL_SCANCODE_ESCAPE:
                     running_ = false;
@@ -116,6 +116,14 @@ struct Game
 
                 case SDL_SCANCODE_DOWN:
                     currentPiece_.move(Coord(0, 1));
+                    break;
+
+                case SDL_SCANCODE_Z:
+                    currentPiece_.rotateLeft();
+                    break;
+
+                case SDL_SCANCODE_X:
+                    currentPiece_.rotateRight();
                     break;
 
                 default: break;

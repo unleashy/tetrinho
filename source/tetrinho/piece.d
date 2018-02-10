@@ -54,6 +54,46 @@ struct Piece
         injectLayout();
     }
 
+    void rotateRight() @safe
+    {
+        rotate!(true);
+    }
+
+    void rotateLeft() @safe
+    {
+        rotate!(false);
+    }
+
+    private void rotate(bool ccw)() @trusted
+    {
+        immutable ylen = blockLayout_.length;
+        immutable xlen = blockLayout_[0].length;
+
+        bool[][] tmpLayout;
+        tmpLayout.length = ylen;
+        foreach (const i; 0 .. ylen) {
+            tmpLayout[i].length = xlen;
+        }
+
+        foreach (const ly, const row; blockLayout_) {
+            foreach (const lx, const hasBlock; row) {
+                if (hasBlock) {
+                    static if (ccw) {
+                        immutable newLy = xlen - 1 - lx;
+                    } else {
+                        immutable newLy = ylen - 1 - lx;
+                    }
+
+                    immutable newLx = ly;
+                    tmpLayout[newLy][newLx] = true;
+                }
+            }
+        }
+
+        blockLayout_ = tmpLayout;
+        injectLayout();
+    }
+
     void center(in int n) @safe
     {
         immutable k = blockLayout_[0].length;
