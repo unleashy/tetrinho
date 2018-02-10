@@ -19,6 +19,11 @@ enum Colors : Color
     RED    = Color(255,   0,   0)
 }
 
+bool isInside(in Coord c, in Rect r) @trusted @nogc
+{
+    return SDL_PointInRect(&c, &r);
+}
+
 T enforceSDL(alias cmp = "a == 0", T)(T a, lazy string message = "SDL error: %s") @trusted
 {
     import std.functional : unaryFun;
@@ -31,3 +36,17 @@ T enforceSDL(alias cmp = "a == 0", T)(T a, lazy string message = "SDL error: %s"
     return a;
 }
 
+T deepCopy(U, T : U[][])(ref T src)
+{
+    import std.algorithm.mutation : copy;
+
+    T dest;
+
+    dest.length = src.length;
+    foreach (const i, ref e; src) {
+        dest[i].length = e.length;
+        e.copy(dest[i]);
+    }
+
+    return dest;
+}
