@@ -1,14 +1,25 @@
 module tetrinho.piece;
 
+import std.stdio;
+
 import accessors;
 
 import tetrinho.util,
        tetrinho.block,
+       tetrinho.rotation,
        tetrinho.playfield;
+
+enum RotationStyle
+{
+    NONE,
+    NORMAL,
+    I_PIECE
+}
 
 struct Piece
 {
     immutable Color color;
+    immutable RotationStyle rotationStyle;
 
     @ConstRead
     private Coord coord_;
@@ -17,8 +28,10 @@ struct Piece
     private bool[][] blockLayout_;
 
     private Block[4] blocks_;
+    private RotationState curRotSt_;
+    private immutable RotationTable rotationTable_;
 
-    this(in Color clr, bool[][] blockLayout) @safe
+    this(in Color clr, bool[][] blockLayout, in RotationStyle rs = RotationStyle.NORMAL) @safe
     {
         color = clr;
         blockLayout_ = blockLayout;
@@ -28,6 +41,13 @@ struct Piece
             new Block(clr, Coord(0, 0), true),
             new Block(clr, Coord(0, 0), true)
         ];
+        rotationStyle = rs;
+
+        if (rotationStyle == RotationStyle.NORMAL) {
+            rotationTable_ = rotationTableNormal;
+        } else {
+            rotationTable_ = rotationTableI;
+        }
 
         injectLayout();
     }
@@ -65,17 +85,22 @@ struct Piece
         return true;
     }
 
-    void rotateRight() @safe
+    void rotateRight(ref Playfield p) @trusted
     {
-        rotate!(true);
+        if (rotationStyle != RotationStyle.NONE) {
+            rotate!(RotationState.RIGHT_ROT)(p);
+        }
     }
 
-    void rotateLeft() @safe
+    void rotateLeft(ref Playfield p) @trusted
     {
-        rotate!(false);
+        if (rotationStyle != RotationStyle.NONE) {
+            rotate!(RotationState.LEFT_ROT)(p);
+        }
     }
 
-    private void rotate(bool ccw)() @trusted
+    private void rotate(RotationState rot)(ref Playfield p) @safe
+        if (rot == RotationState.RIGHT_ROT || rot == RotationState.LEFT_ROT)
     {
         immutable ylen = blockLayout_.length;
         immutable xlen = blockLayout_[0].length;
@@ -89,20 +114,47 @@ struct Piece
         foreach (const ly, const row; blockLayout_) {
             foreach (const lx, const hasBlock; row) {
                 if (hasBlock) {
-                    static if (ccw) {
-                        immutable newLy = xlen - 1 - lx;
+                    static if (rot == RotationState.RIGHT_ROT) {
+                        immutable newLy = lx;
+                        immutable newLx = xlen - 1 - ly;
                     } else {
                         immutable newLy = ylen - 1 - lx;
+                        immutable newLx = ly;
                     }
 
-                    immutable newLx = ly;
                     tmpLayout[newLy][newLx] = true;
                 }
             }
         }
 
+        auto savedLayout = blockLayout_.deepCopy();
         blockLayout_ = tmpLayout;
+
         injectLayout();
+
+        if (anyCollision(p)) {
+            if (!tryKick!(rot)(p)) {
+                // Rollback!
+                blockLayout_ = savedLayout;
+                injectLayout();
+            }
+        } else {
+            curRotSt_ = calculateKey!rot(curRotSt_).to;
+        }
+    }
+
+    private bool tryKick(RotationState rot)(ref Playfield p) @trusted
+    {
+        auto key = calculateKey!rot(curRotSt_);
+
+        foreach (const d; rotationTable_[key]) {
+            if (move(d, p)) {
+                curRotSt_ = key.to;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     bool anyCollision(ref Playfield p) @safe
@@ -152,63 +204,70 @@ struct Piece
 // This is a bunch of heap-allocated Pieces because I can't shuffle an array
 // of straight up Pieces because I can't swap straight up Pieces because it
 // has an immutable member.
-private static Piece*[7] defaultPieces_ = [
-    /* I piece */
-    new Piece(
-        Colors.CYAN,
-        [[0, 0, 0, 0],
-         [1, 1, 1, 1],
-         [0, 0, 0, 0],
-         [0, 0, 0, 0]]
-    ),
+private Piece*[7] defaultPieces_;
 
-    /* J piece */
-    new Piece(
-        Colors.BLUE,
-        [[1, 0, 0],
-         [1, 1, 1],
-         [0, 0, 0]]
-    ),
+static this() @safe
+{
+    defaultPieces_ = [
+        /* I piece */
+        new Piece(
+            Colors.CYAN,
+            [[0, 0, 0, 0],
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]],
+            RotationStyle.I_PIECE
+        ),
 
-    /* L piece */
-    new Piece(
-        Colors.ORANGE,
-        [[0, 0, 1],
-         [1, 1, 1],
-         [0, 0, 0]]
-    ),
+        /* J piece */
+        new Piece(
+            Colors.BLUE,
+            [[1, 0, 0],
+            [1, 1, 1],
+            [0, 0, 0]]
+        ),
 
-    /* O piece */
-    new Piece(
-        Colors.YELLOW,
-        [[1, 1],
-         [1, 1]]
-    ),
+        /* L piece */
+        new Piece(
+            Colors.ORANGE,
+            [[0, 0, 1],
+            [1, 1, 1],
+            [0, 0, 0]]
+        ),
 
-    /* S piece */
-    new Piece(
-        Colors.GREEN,
-        [[0, 1, 1],
-         [1, 1, 0],
-         [0, 0, 0]]
-    ),
+        /* O piece */
+        new Piece(
+            Colors.YELLOW,
+            [[1, 1],
+            [1, 1]],
+            RotationStyle.NONE
+        ),
 
-    /* T piece */
-    new Piece(
-        Colors.PURPLE,
-        [[0, 1, 0],
-         [1, 1, 1],
-         [0, 0, 0]]
-    ),
+        /* S piece */
+        new Piece(
+            Colors.GREEN,
+            [[0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 0]]
+        ),
 
-    /* Z piece */
-    new Piece(
-        Colors.RED,
-        [[1, 1, 0],
-         [0, 1, 1],
-         [0, 0, 0]]
-    ),
-];
+        /* T piece */
+        new Piece(
+            Colors.PURPLE,
+            [[0, 1, 0],
+            [1, 1, 1],
+            [0, 0, 0]]
+        ),
+
+        /* Z piece */
+        new Piece(
+            Colors.RED,
+            [[1, 1, 0],
+            [0, 1, 1],
+            [0, 0, 0]]
+        ),
+    ];
+}
 
 Piece generateNewPiece() @safe
 {

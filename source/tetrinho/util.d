@@ -36,7 +36,7 @@ T enforceSDL(alias cmp = "a == 0", T)(T a, lazy string message = "SDL error: %s"
     return a;
 }
 
-T deepCopy(U, T : U[][])(ref T src)
+T deepCopy(T : U[][], U)(ref T src) @safe
 {
     import std.algorithm.mutation : copy;
 

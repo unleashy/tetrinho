@@ -119,11 +119,11 @@ struct Game
                     break;
 
                 case SDL_SCANCODE_Z:
-                    currentPiece_.rotateLeft();
+                    currentPiece_.rotateLeft(playfield_);
                     break;
 
                 case SDL_SCANCODE_X:
-                    currentPiece_.rotateRight();
+                    currentPiece_.rotateRight(playfield_);
                     break;
 
                 default: break;
