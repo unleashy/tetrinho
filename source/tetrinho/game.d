@@ -98,15 +98,6 @@ struct Game
         }
     }
 
-    private void advancePieces()
-    {
-        currentPiece_ = nextPiece_;
-        currentPiece_.spawnPiece(playfield_);
-
-        nextPiece_ = generateNewPiece();
-        nextPiece_.center(COLS);
-    }
-
     private void handleInput(in SDL_Scancode sc, in KeyState state)
     {
         if (state == KeyState.KEY_DOWN) {
@@ -179,6 +170,34 @@ struct Game
 
     end:
         Timer.tickAll(MS_PER_UPDATE);
+    }
+
+    private void advancePieces()
+    {
+        clearLines();
+
+        currentPiece_ = nextPiece_;
+        currentPiece_.spawnPiece(playfield_);
+
+        nextPiece_ = generateNewPiece();
+        nextPiece_.center(COLS);
+    }
+
+    private void clearLines()
+    {
+        import std.algorithm : maxElement;
+
+        auto lines = playfield_.findLines();
+        if (playfield_.remove(lines)) {
+            playfield_.gravityFrom(
+                lines.maxElement!("a.coords.y").coords.y - 1,
+                lines.length / COLS
+            );
+
+            foreach (ref blk; lines) {
+                destroy(blk); // we have no need for these at all anymore
+            }
+        }
     }
 
     private void draw()

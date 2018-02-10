@@ -1,5 +1,7 @@
 module tetrinho.playfield;
 
+import std.algorithm;
+
 import tetrinho.util,
        tetrinho.block,
        tetrinho.graphics;
@@ -53,6 +55,29 @@ struct Playfield
         }
 
         return anyRemoved;
+    }
+
+    Block[] findLines() @safe
+    {
+        import std.range : iota;
+        import std.array : appender, array;
+
+        auto buf = appender!(Block[]);
+
+        foreach (y; iota(ROWS - 1, -1, -1)) {
+            auto ln = field_.filter!(b => b !is null && b.coords.y == y).array;
+            if (ln.length == COLS) {
+                buf ~= ln;
+            }
+        }
+
+        return buf.data;
+    }
+
+    void gravityFrom(in uint y, in uint dy) @safe
+    {
+        field_.filter!(b => b !is null && !b.inFormation && b.coords.y <= y)
+              .each!(b => b.coords.y += dy);
     }
 
     void draw(ref Graphics graphics) const
