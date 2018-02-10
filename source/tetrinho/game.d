@@ -9,8 +9,10 @@ import tetrinho.block,
        tetrinho.timer,
        tetrinho.util;
 
-enum uint MS_PER_UPDATE   = 16;
+enum uint MS_PER_UPDATE = 16;
+
 enum uint GRAVITY_TIMEOUT = 750;
+enum uint LOCKING_TIMEOUT = 500;
 
 enum KeyState
 {
@@ -25,7 +27,7 @@ struct Game
     private Graphics graphics_;
     private Playfield playfield_;
     private Piece currentPiece_, nextPiece_;
-    private Timer gravityTimer_;
+    private Timer gravityTimer_, lockTimer_;
 
     static Game opCall()
     {
@@ -34,6 +36,8 @@ struct Game
         g.graphics_     = Graphics();
         g.playfield_    = Playfield();
         g.gravityTimer_ = new Timer(GRAVITY_TIMEOUT);
+        g.lockTimer_    = new Timer(LOCKING_TIMEOUT);
+        g.lockTimer_.deactivate();
 
         return g;
     }
@@ -139,11 +143,22 @@ struct Game
     {
         static immutable GRAVITY_DELTA = Coord(0, 1);
 
-        if (gravityTimer_.expired) {
-            if (!currentPiece_.move(GRAVITY_DELTA, playfield_)) {
+        if (lockTimer_.active) {
+            if (lockTimer_.expired) {
+                lockTimer_.deactivate();
+                gravityTimer_.activate();
                 advancePieces();
+            } else if (currentPiece_.floating(playfield_)) {
+                lockTimer_.deactivate();
+                gravityTimer_.activate();
             }
+        } else if (!currentPiece_.floating(playfield_)) {
+            lockTimer_.activate();
+            gravityTimer_.deactivate();
+        }
 
+        if (gravityTimer_.expired) {
+            currentPiece_.move(GRAVITY_DELTA, playfield_);
             gravityTimer_.reset();
         }
 
