@@ -46,12 +46,23 @@ struct Piece
         p.add(blocks_);
     }
 
-    void move(in Coord d) @safe
+    bool move(in Coord d, ref Playfield p) @safe
     {
         coord_.x += d.x;
         coord_.y += d.y;
 
         injectLayout();
+
+        if (anyCollision(p)) {
+            coord_.x -= d.x;
+            coord_.y -= d.y;
+
+            injectLayout();
+
+            return false;
+        }
+
+        return true;
     }
 
     void rotateRight() @safe
@@ -92,6 +103,25 @@ struct Piece
 
         blockLayout_ = tmpLayout;
         injectLayout();
+    }
+
+    bool anyCollision(ref Playfield p) @safe
+    {
+        static immutable BOARD_RECT = Rect(0, 0, COLS, ROWS);
+
+        foreach (const block; blocks_) {
+            if (!block.coords.isInside(BOARD_RECT)) {
+                return true;
+            }
+
+            foreach (const fblock; p) {
+                if (block !is fblock && block.coords == fblock.coords) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     void center(in int n) @safe

@@ -107,15 +107,15 @@ struct Game
                     break;
 
                 case SDL_SCANCODE_RIGHT:
-                    currentPiece_.move(Coord(1, 0));
+                    currentPiece_.move(Coord(1, 0), playfield_);
                     break;
 
                 case SDL_SCANCODE_LEFT:
-                    currentPiece_.move(Coord(-1, 0));
+                    currentPiece_.move(Coord(-1, 0), playfield_);
                     break;
 
                 case SDL_SCANCODE_DOWN:
-                    currentPiece_.move(Coord(0, 1));
+                    currentPiece_.move(Coord(0, 1), playfield_);
                     break;
 
                 case SDL_SCANCODE_Z:
