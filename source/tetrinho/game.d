@@ -2,13 +2,15 @@ module tetrinho.game;
 
 import derelict.sdl2.sdl;
 
-import tetrinho.util,
+import tetrinho.block,
        tetrinho.graphics,
-       tetrinho.block,
+       tetrinho.piece,
        tetrinho.playfield,
-       tetrinho.piece;
+       tetrinho.timer,
+       tetrinho.util;
 
-enum uint MS_PER_UPDATE = 16;
+enum uint MS_PER_UPDATE   = 16;
+enum uint GRAVITY_TIMEOUT = 750;
 
 enum KeyState
 {
@@ -23,13 +25,15 @@ struct Game
     private Graphics graphics_;
     private Playfield playfield_;
     private Piece currentPiece_, nextPiece_;
+    private Timer gravityTimer_;
 
     static Game opCall()
     {
         Game g;
 
-        g.graphics_  = Graphics();
-        g.playfield_ = Playfield();
+        g.graphics_     = Graphics();
+        g.playfield_    = Playfield();
+        g.gravityTimer_ = new Timer(GRAVITY_TIMEOUT);
 
         return g;
     }
@@ -133,7 +137,17 @@ struct Game
 
     private void update()
     {
-        /* TODO: update */
+        static immutable GRAVITY_DELTA = Coord(0, 1);
+
+        if (gravityTimer_.expired) {
+            if (!currentPiece_.move(GRAVITY_DELTA, playfield_)) {
+                advancePieces();
+            }
+
+            gravityTimer_.reset();
+        }
+
+        Timer.tickAll(MS_PER_UPDATE);
     }
 
     private void draw()
