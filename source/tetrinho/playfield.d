@@ -106,4 +106,20 @@ struct Playfield
             );
         }
     }
+
+    int opApply(scope int delegate(ref Block) dg) @trusted
+    {
+        int result = 0;
+
+        foreach (ref block; field_) {
+            if (block !is null) {
+                result = dg(block);
+                if (result) {
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
 }
