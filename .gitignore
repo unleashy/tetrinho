@@ -16,4 +16,4 @@ tetris-test-*
 dub.selections.json
 .vscode/
 bin/
-.dscanner.ini
+dscanner.ini
