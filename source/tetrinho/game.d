@@ -4,8 +4,9 @@ import derelict.sdl2.sdl;
 
 import tetrinho.util,
        tetrinho.graphics,
+       tetrinho.block,
        tetrinho.playfield,
-       tetrinho.block;
+       tetrinho.piece;
 
 enum uint MS_PER_UPDATE = 16;
 
@@ -18,9 +19,10 @@ enum KeyState
 
 struct Game
 {
+    private bool running_;
     private Graphics graphics_;
     private Playfield playfield_;
-    private bool running_;
+    private Piece currentPiece_, nextPiece_;
 
     static Game opCall()
     {
@@ -35,6 +37,10 @@ struct Game
     void run()
     {
         running_ = true;
+
+        nextPiece_ = generateNewPiece();
+        nextPiece_.center(COLS);
+        advancePieces();
 
         SDL_Event e;
         auto previousTimeMs = SDL_GetTicks();
@@ -83,10 +89,37 @@ struct Game
         }
     }
 
+    private void advancePieces()
+    {
+        currentPiece_ = nextPiece_;
+        currentPiece_.spawnPiece(playfield_);
+
+        nextPiece_ = generateNewPiece();
+        nextPiece_.center(COLS);
+    }
+
     private void handleInput(in SDL_Scancode sc, in KeyState state)
     {
-        if (state == KeyState.KEY_DOWN && sc == SDL_SCANCODE_ESCAPE) {
-            running_ = false;
+        if (state == KeyState.KEY_DOWN) {
+            switch (sc) {
+                case SDL_SCANCODE_ESCAPE:
+                    running_ = false;
+                    break;
+
+                case SDL_SCANCODE_RIGHT:
+                    currentPiece_.move(Coord(1, 0));
+                    break;
+
+                case SDL_SCANCODE_LEFT:
+                    currentPiece_.move(Coord(-1, 0));
+                    break;
+
+                case SDL_SCANCODE_DOWN:
+                    currentPiece_.move(Coord(0, 1));
+                    break;
+
+                default: break;
+            }
         }
     }
 
