@@ -282,5 +282,6 @@ Piece generateNewPiece() @safe
     }
 
     scope(exit) pieceBag_.popFront();
-    return *(pieceBag_.front);
+    Piece tmpl = *(pieceBag_.front);
+    return Piece(tmpl.color, tmpl.blockLayout_, tmpl.rotationStyle);
 }
