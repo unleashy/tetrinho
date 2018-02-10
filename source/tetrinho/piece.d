@@ -97,9 +97,8 @@ struct Piece
     void center(in int n) @safe
     {
         immutable k = blockLayout_[0].length;
-        immutable l = n - k;
 
-        coord_.x = l - (l / 2);
+        coord_.x = (n - k) / 2;
         injectLayout();
     }
 
