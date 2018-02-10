@@ -66,20 +66,22 @@ struct Piece
         p.add(blocks_);
     }
 
-    bool move(in Coord d, ref Playfield p) @safe
+    bool move(bool checkCollisions = true)(in Coord d, ref Playfield p) @safe
     {
         coord_.x += d.x;
         coord_.y += d.y;
 
         injectLayout();
 
-        if (anyCollision(p)) {
-            coord_.x -= d.x;
-            coord_.y -= d.y;
+        static if (checkCollisions) {
+            if (anyCollision(p)) {
+                coord_.x -= d.x;
+                coord_.y -= d.y;
 
-            injectLayout();
+                injectLayout();
 
-            return false;
+                return false;
+            }
         }
 
         return true;
@@ -171,6 +173,19 @@ struct Piece
                     return true;
                 }
             }
+        }
+
+        return false;
+    }
+
+    bool floating(ref Playfield p) @safe
+    {
+        static immutable TEST_DELTA     = Coord(0, 1);
+        static immutable ROLLBACK_DELTA = Coord(0, -1);
+
+        if (move(TEST_DELTA, p)) {
+            move!false(ROLLBACK_DELTA, p);
+            return true;
         }
 
         return false;
