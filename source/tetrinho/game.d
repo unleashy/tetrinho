@@ -28,6 +28,7 @@ struct Game
     private Playfield playfield_;
     private Piece currentPiece_, nextPiece_;
     private Timer gravityTimer_, lockTimer_;
+    private bool pieceDropping_;
 
     static Game opCall()
     {
@@ -108,12 +109,17 @@ struct Game
 
     private void handleInput(in SDL_Scancode sc, in KeyState state)
     {
-        if (state == KeyState.KEY_DOWN || state == KeyState.KEY_REPEAT) {
-            switch (sc) {
-                case SDL_SCANCODE_ESCAPE:
-                    running_ = false;
-                    break;
+        if (state == KeyState.KEY_DOWN) {
+            if (sc == SDL_SCANCODE_SPACE) {
+                pieceDropping_ = true;
+                gravityTimer_.deactivate();
+            } else if (sc == SDL_SCANCODE_ESCAPE) {
+                running_ = false;
+            }
+        }
 
+        if (!pieceDropping_ && (state == KeyState.KEY_DOWN || state == KeyState.KEY_REPEAT)) {
+            switch (sc) {
                 case SDL_SCANCODE_RIGHT:
                     currentPiece_.move(Coord(1, 0), playfield_);
                     break;
@@ -143,6 +149,15 @@ struct Game
     {
         static immutable GRAVITY_DELTA = Coord(0, 1);
 
+        if (pieceDropping_) {
+            if (!currentPiece_.move(GRAVITY_DELTA, playfield_)) {
+                pieceDropping_ = false;
+                lockTimer_.activate();
+            }
+
+            goto end; // YES YES THIS IS A GOTO, WHATCHA GONNA DO ABOUT IT?
+        }
+
         if (lockTimer_.active) {
             if (lockTimer_.expired) {
                 lockTimer_.deactivate();
@@ -162,6 +177,7 @@ struct Game
             gravityTimer_.reset();
         }
 
+    end:
         Timer.tickAll(MS_PER_UPDATE);
     }
 
