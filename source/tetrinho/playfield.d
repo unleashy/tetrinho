@@ -81,7 +81,7 @@ struct Playfield
 
     void gravityFrom(in uint y, in uint dy) @safe
     {
-        field_.filter!(b => b !is null && !b.inPiece && b.coords.y <= y)
+        field_.filter!(b => b !is null && !b.inPiece && b.coords.y < (ROWS - 1) && b.coords.y <= y)
               .each!(b => b.coords.y += dy);
     }
 
