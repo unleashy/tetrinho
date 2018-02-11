@@ -6,15 +6,16 @@ final class Timer
 {
     private static Timer[] timers_;
 
-    private uint timeout_, currentTime_;
+    uint timeout;
+    private uint currentTime_;
     @ConstRead private bool active_, expired_;
 
     @disable this();
 
-    this(in uint timeout) @safe
+    this(in uint t) @safe
     {
-        active_  = true;
-        timeout_ = timeout;
+        active_ = true;
+        timeout = t;
 
         timers_ ~= this;
     }
@@ -43,7 +44,7 @@ final class Timer
     {
         if (active) {
             currentTime_ += time;
-            if (currentTime_ >= timeout_) {
+            if (currentTime_ >= timeout) {
                 expired_ = true;
             }
         }

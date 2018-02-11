@@ -12,7 +12,6 @@ import tetrinho.block,
 
 enum uint MS_PER_UPDATE = 16;
 
-enum uint GRAVITY_TIMEOUT = 750;
 enum uint LOCKING_TIMEOUT = 500;
 
 enum KeyState
@@ -38,7 +37,7 @@ struct Game
 
         g.graphics_     = Graphics();
         g.playfield_    = Playfield();
-        g.gravityTimer_ = new Timer(GRAVITY_TIMEOUT);
+        g.gravityTimer_ = new Timer(g.calculateGravityTimeout(1));
         g.lockTimer_    = new Timer(LOCKING_TIMEOUT);
         g.lockTimer_.deactivate();
 
@@ -48,6 +47,11 @@ struct Game
     void run()
     {
         running_ = true;
+
+        scoreboard_.onLevelUp((level) {
+            gravityTimer_.timeout = calculateGravityTimeout(level);
+            gravityTimer_.reset();
+        });
 
         nextPiece_ = generateNewPiece();
         nextPiece_.center(COLS);
@@ -208,6 +212,12 @@ struct Game
         } else {
             scoreboard_.resetCombo();
         }
+    }
+
+    private uint calculateGravityTimeout(in uint level) @safe @nogc pure
+    {
+        immutable levelR = level - 1;
+        return cast(uint) (((0.8 - (levelR * 0.007)) ^^ levelR) * 1000);
     }
 
     private void draw()

@@ -7,14 +7,18 @@ import tetrinho.graphics,
 
 struct Scoreboard
 {
+    alias LevelUpDelegate = void delegate(uint) @safe;
+
     static immutable uint[uint] SCORE_MAPPING;
 
     @ConstRead {
-        private uint level_             = 1;
-        private uint score_             = 0;
-        private uint combo_             = 1;
-        private uint totalLinesCleared_ = 0;
+        private uint level_      = 1;
+        private uint score_      = 0;
+        private uint combo_      = 1;
+        private uint levelScore_ = 0;
     }
+
+    private LevelUpDelegate levelUpDg_;
 
     static this()
     {
@@ -33,23 +37,34 @@ struct Scoreboard
     }
     do
     {
-        combo_ += linesCleared;
-        score_ += SCORE_MAPPING[linesCleared] * level_;
+        immutable pts = SCORE_MAPPING[linesCleared];
+
+        score_      += pts * level_;
+        levelScore_ += pts / 100;
+        combo_      += linesCleared;
 
         if (combo_ > 1) {
             score_ += 50 * combo_ * level_;
         }
 
-        if (totalLinesCleared_ >= 5 * level_) {
+        if (levelScore_ >= 5 * level_) {
+            levelScore_ = 0;
             ++level_;
-        }
 
-        totalLinesCleared_ += linesCleared;
+            if (levelUpDg_ !is null) {
+                levelUpDg_(level_);
+            }
+        }
     }
 
     void resetCombo() @safe @nogc nothrow
     {
         combo_ = 1;
+    }
+
+    void onLevelUp(scope LevelUpDelegate dg)
+    {
+        levelUpDg_ = dg;
     }
 
     void draw(ref Graphics graphics) const
