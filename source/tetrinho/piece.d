@@ -51,11 +51,14 @@ struct Piece
         injectLayout();
     }
 
-    ~this() @safe
+    ~this() @safe @nogc nothrow pure
+    {}
+
+    void detachBlocks() @safe
     {
-        foreach (blk; blocks_) {
+        foreach (ref blk; blocks_) {
             if (blk !is null) {
-                blk.inFormation = false;
+                blk.inPiece = false;
             }
         }
     }

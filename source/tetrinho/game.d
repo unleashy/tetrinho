@@ -176,6 +176,8 @@ struct Game
 
     private void advancePieces()
     {
+        currentPiece_.detachBlocks();
+
         clearLines();
 
         currentPiece_ = nextPiece_;

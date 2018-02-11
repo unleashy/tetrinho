@@ -14,20 +14,30 @@ enum BLK_HEIGHT = BOARD_HEIGHT / ROWS;
 final class Block
 {
     immutable Color color;
+    immutable Color lockedColor;
     Coord coords;
-    bool inFormation;
+    bool inPiece;
 
-    this(in Color c, in Coord crds, in bool inF) @safe @nogc
+    this(in Color c, in Coord crds, in bool inP) @safe @nogc
     {
         color       = c;
         coords      = crds;
-        inFormation = inF;
+        inPiece     = inP;
+        lockedColor = Color(c.r, c.g, c.b, 195);
     }
 
     void draw(ref Graphics graphics, in Coord modifier) const
     {
+        Color clr = void;
+        if (inPiece) {
+            clr = color;
+        } else {
+            clr = lockedColor;
+            graphics.blend();
+        }
+
         graphics.renderRect(
-            color,
+            clr,
             Rect(
                 cast(int) (coords.x * BLK_WIDTH + modifier.x),
                 cast(int) (coords.y * BLK_HEIGHT + modifier.y),

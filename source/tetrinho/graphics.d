@@ -143,6 +143,11 @@ struct Graphics
         SDL_SetRenderDrawBlendMode(renderer_, blendMode);
     }
 
+    void blend()
+    {
+        SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
+    }
+
     private void setRenderClearColor()
     {
         SDL_SetRenderDrawColor(renderer_, 60, 100, 175, SDL_ALPHA_OPAQUE);
