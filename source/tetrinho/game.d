@@ -6,6 +6,7 @@ import tetrinho.block,
        tetrinho.graphics,
        tetrinho.piece,
        tetrinho.playfield,
+       tetrinho.scoring,
        tetrinho.timer,
        tetrinho.util;
 
@@ -28,6 +29,7 @@ struct Game
     private Playfield playfield_;
     private Piece currentPiece_, nextPiece_;
     private Timer gravityTimer_, lockTimer_;
+    private Scoreboard scoreboard_;
     private bool pieceDropping_;
 
     static Game opCall()
@@ -189,14 +191,20 @@ struct Game
 
         auto lines = playfield_.findLines();
         if (playfield_.remove(lines)) {
+            immutable linesCleared = lines.length / COLS;
+
             playfield_.gravityFrom(
                 lines.maxElement!("a.coords.y").coords.y - 1,
-                lines.length / COLS
+                linesCleared
             );
+
+            scoreboard_.lineClear(linesCleared);
 
             foreach (ref blk; lines) {
                 destroy(blk); // we have no need for these at all anymore
             }
+        } else {
+            scoreboard_.resetCombo();
         }
     }
 
@@ -205,6 +213,7 @@ struct Game
         graphics_.renderClear();
 
         playfield_.draw(graphics_);
+        scoreboard_.draw(graphics_);
 
         // Draw next piece
         enum NEXT_FORMATION_COORDS = Coord(10, 230);
