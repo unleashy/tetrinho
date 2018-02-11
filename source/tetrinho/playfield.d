@@ -10,6 +10,11 @@ enum ROWS    = 24;
 enum COLS    = 10;
 enum BLK_QTY = ROWS * COLS;
 
+enum BOARD_X      = 255;
+enum BOARD_Y      = 5;
+enum BOARD_WIDTH  = WINDOW_WIDTH - BOARD_X - 5;
+enum BOARD_HEIGHT = WINDOW_HEIGHT - 10;
+
 struct Playfield
 {
     private Block[] field_;
@@ -84,12 +89,7 @@ struct Playfield
     {
         import derelict.sdl2.sdl : SDL_BLENDMODE_BLEND;
 
-        enum BOARD_X      = 255;
-        enum BOARD_Y      = 5;
-        enum BOARD_WIDTH  = WINDOW_WIDTH - BOARD_X - 5;
-        enum BOARD_HEIGHT = WINDOW_HEIGHT - 10;
-        enum BLK_WIDTH    = BOARD_WIDTH / COLS;
-        enum BLK_HEIGHT   = BOARD_HEIGHT / ROWS;
+        static immutable BOARD_COORD = Coord(BOARD_X, BOARD_Y);
 
         // Board background
         graphics.renderRect(
@@ -100,15 +100,7 @@ struct Playfield
         // Blocks
         foreach (const block; field_) {
             if (block !is null) {
-                graphics.renderRect(
-                    block.color,
-                    Rect(
-                        cast(int) (block.coords.x * BLK_WIDTH + BOARD_X),
-                        cast(int) (block.coords.y * BLK_HEIGHT + BOARD_Y),
-                        BLK_WIDTH,
-                        BLK_HEIGHT
-                    )
-                );
+                block.draw(graphics, BOARD_COORD);
             }
         }
 
