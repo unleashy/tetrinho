@@ -29,7 +29,7 @@ struct Game
     private Piece currentPiece_, nextPiece_;
     private Timer gravityTimer_, lockTimer_;
     private Scoreboard scoreboard_;
-    private bool pieceDropping_;
+    private bool pieceDropping_, gameOver_;
 
     static Game opCall()
     {
@@ -106,6 +106,8 @@ struct Game
 
     private void handleInput(in SDL_Scancode sc, in KeyState state)
     {
+        if (gameOver_) return;
+
         if (state == KeyState.KEY_DOWN) {
             if (sc == SDL_SCANCODE_SPACE) {
                 pieceDropping_ = true;
@@ -145,6 +147,8 @@ struct Game
     private void update()
     {
         static immutable GRAVITY_DELTA = Coord(0, 1);
+
+        if (gameOver_) return;
 
         if (pieceDropping_) {
             if (!currentPiece_.move(GRAVITY_DELTA, playfield_)) {
@@ -189,6 +193,10 @@ struct Game
 
         nextPiece_ = generateNewPiece();
         nextPiece_.center(COLS);
+
+        if (currentPiece_.anyCollision(playfield_)) {
+            gameOver_ = true;
+        }
     }
 
     private void clearLines()
@@ -227,6 +235,10 @@ struct Game
         playfield_.draw(graphics_);
         scoreboard_.draw(graphics_);
 
+        if (gameOver_) {
+            drawGameOver();
+        }
+
         // Draw next piece
         enum NEXT_FORMATION_COORDS = Coord(10, 230);
         enum NEXT_FORMATION_TXT_COORDS = Coord(95, 200);
@@ -242,5 +254,19 @@ struct Game
         }
 
         graphics_.renderPresent();
+    }
+
+    private void drawGameOver()
+    {
+        static immutable GAME_OVER_BG  = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
+        static immutable GAME_OVER_CLR = Color(0, 0, 0, 170);
+        static immutable GAME_OVER_TXT = Coord(
+            (BOARD_X + BOARD_WIDTH + 100) / 2,
+            (BOARD_Y + BOARD_HEIGHT - 30) / 2
+        );
+
+        graphics_.blend();
+        graphics_.renderRect(GAME_OVER_CLR, GAME_OVER_BG);
+        graphics_.renderText("GAME OVER", GAME_OVER_TXT);
     }
 }
