@@ -206,6 +206,20 @@ struct Game
 
         playfield_.draw(graphics_);
 
+        // Draw next piece
+        enum NEXT_FORMATION_COORDS = Coord(10, 230);
+        enum NEXT_FORMATION_TXT_COORDS = Coord(95, 200);
+        static immutable NEXT_FORMATION_BG = Rect(
+            82, NEXT_FORMATION_COORDS.y - 30, BLK_WIDTH * 4, BLK_HEIGHT * 2 + 30
+        );
+
+        graphics_.renderRect(Colors.BLACK, NEXT_FORMATION_BG);
+        graphics_.renderText("NEXT", NEXT_FORMATION_TXT_COORDS);
+
+        foreach (const block; nextPiece_.blocks) {
+            block.draw(graphics_, NEXT_FORMATION_COORDS);
+        }
+
         graphics_.renderPresent();
     }
 }

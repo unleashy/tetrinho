@@ -21,13 +21,12 @@ struct Piece
     immutable Color color;
     immutable RotationStyle rotationStyle;
 
-    @ConstRead
-    private Coord coord_;
+    @ConstRead {
+        private Coord coord_;
+        private bool[][] blockLayout_;
+        private Block[4] blocks_;
+    }
 
-    @ConstRead
-    private bool[][] blockLayout_;
-
-    private Block[4] blocks_;
     private RotationState curRotSt_;
     private immutable RotationTable rotationTable_;
 
@@ -214,6 +213,8 @@ struct Piece
             }
         }
     }
+
+    mixin(GenerateFieldAccessors);
 }
 
 // This is a bunch of heap-allocated Pieces because I can't shuffle an array
