@@ -203,18 +203,19 @@ struct Game
     {
         import std.algorithm : maxElement;
 
-        auto lines = playfield_.findLines();
-        if (playfield_.remove(lines)) {
-            immutable linesCleared = lines.length / COLS;
+        auto lineData = playfield_.findLines();
+        import std.stdio : stderr;
+        stderr.writeln(lineData);
+        if (playfield_.remove(lineData.blocks)) {
+            immutable linesCleared = lineData.rows.length;
 
-            playfield_.gravityFrom(
-                lines.maxElement!("a.coords.y").coords.y - 1,
-                linesCleared
-            );
+            foreach (const row; lineData.rows) {
+                playfield_.gravityFrom(row, 1);
+            }
 
             scoreboard_.lineClear(linesCleared);
 
-            foreach (ref blk; lines) {
+            foreach (ref blk; lineData.blocks) {
                 destroy(blk); // we have no need for these at all anymore
             }
         } else {
