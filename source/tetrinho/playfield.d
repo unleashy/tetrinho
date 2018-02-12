@@ -124,6 +124,33 @@ struct Playfield
         }
     }
 
+    void build(in string pat) @trusted
+    {
+        import std.range : iota, lockstep, retro;
+        import std.array : appender;
+
+        auto fieldAppender = appender(field_);
+        auto lines = pat.splitter('\n').retro();
+
+        foreach (line, row; lockstep(lines, iota(ROWS - 1, -1, -1))) {
+            fieldAppender.reserve(line.length);
+
+            foreach (block, col; lockstep(line, iota(0, COLS))) {
+                final switch (block) {
+                    case '#':
+                        fieldAppender ~= new Block(Colors.CYAN, Coord(col, row), false);
+                        break;
+
+                    case ' ':
+                        // space, ignore
+                        break;
+                }
+            }
+        }
+
+        field_ = fieldAppender.data;
+    }
+
     int opApply(scope int delegate(ref Block) dg) @trusted
     {
         int result = 0;
