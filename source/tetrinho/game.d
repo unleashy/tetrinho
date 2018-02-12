@@ -106,15 +106,15 @@ struct Game
 
     private void handleInput(in SDL_Scancode sc, in KeyState state)
     {
+        if (state == KeyState.KEY_DOWN && sc == SDL_SCANCODE_ESCAPE) {
+            running_ = false;
+        }
+
         if (gameOver_) return;
 
-        if (state == KeyState.KEY_DOWN) {
-            if (sc == SDL_SCANCODE_SPACE) {
-                pieceDropping_ = true;
-                gravityTimer_.deactivate();
-            } else if (sc == SDL_SCANCODE_ESCAPE) {
-                running_ = false;
-            }
+        if (state == KeyState.KEY_DOWN && sc == SDL_SCANCODE_SPACE) {
+            pieceDropping_ = true;
+            gravityTimer_.deactivate();
         }
 
         if (!pieceDropping_ && (state == KeyState.KEY_DOWN || state == KeyState.KEY_REPEAT)) {
