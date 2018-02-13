@@ -32,7 +32,7 @@ struct Scoreboard
 
     void drop(in uint multiplier) @safe
     {
-        score_ += multiplier;
+        score_ += level_ * multiplier;
     }
 
     void lineClear(in uint linesCleared) @safe
