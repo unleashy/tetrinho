@@ -9,6 +9,23 @@ struct Scoreboard
 {
     alias LevelUpDelegate = void delegate(uint) @safe;
 
+    private struct Formatted
+    {
+        string str;
+        bool needsUpdate = true;
+
+        void set(in string f) @safe @nogc nothrow
+        {
+            str = f;
+            needsUpdate = false;
+        }
+
+        void mark() @safe @nogc nothrow
+        {
+            needsUpdate = true;
+        }
+    }
+
     static immutable uint[uint] SCORE_MAPPING;
 
     @ConstRead {
@@ -19,6 +36,8 @@ struct Scoreboard
     }
 
     private LevelUpDelegate levelUpDg_;
+
+    private Formatted levelFormatted_, scoreFormatted_, comboFormatted_;
 
     static this()
     {
@@ -33,6 +52,7 @@ struct Scoreboard
     void drop(in uint multiplier) @safe
     {
         score_ += level_ * multiplier;
+        scoreFormatted_.mark();
     }
 
     void lineClear(in uint linesCleared) @safe
@@ -60,12 +80,18 @@ struct Scoreboard
             if (levelUpDg_ !is null) {
                 levelUpDg_(level_);
             }
+
+            levelFormatted_.mark();
         }
+
+        scoreFormatted_.mark();
+        comboFormatted_.mark();
     }
 
     void resetCombo() @safe @nogc nothrow
     {
         combo_ = 1;
+        comboFormatted_.mark();
     }
 
     void onLevelUp(scope LevelUpDelegate dg)
@@ -73,21 +99,33 @@ struct Scoreboard
         levelUpDg_ = dg;
     }
 
-    void draw(ref Graphics graphics) const
+    void draw(ref Graphics graphics)
     {
         import std.format : format;
 
         static immutable LEVEL_TEXT_BG = Rect(5, 5, 245, 90);
 
+        if (levelFormatted_.needsUpdate) {
+            levelFormatted_.set(format!"%02d"(level_));
+        }
+
+        if (scoreFormatted_.needsUpdate) {
+            scoreFormatted_.set(format!"%08d"(score_));
+        }
+
+        if (comboFormatted_.needsUpdate) {
+            comboFormatted_.set(format!"%dx"(combo_));
+        }
+
         graphics.renderRect(Colors.BLACK, LEVEL_TEXT_BG);
 
         graphics.renderText("LEVEL", Coord(10, 5));
-        graphics.renderText(format!"%02d"(level_), Coord(110, 5));
+        graphics.renderText(levelFormatted_.str, Coord(110, 5));
 
         graphics.renderText("SCORE", Coord(10, 35));
-        graphics.renderText(format!"%08d"(score_), Coord(110, 35));
+        graphics.renderText(scoreFormatted_.str, Coord(110, 35));
 
         graphics.renderText("COMBO", Coord(10, 65));
-        graphics.renderText(format!"%dx"(combo_), Coord(110, 65));
+        graphics.renderText(comboFormatted_.str, Coord(110, 65));
     }
 }
