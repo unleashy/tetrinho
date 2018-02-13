@@ -8,25 +8,25 @@ import tetrinho.graphics,
 
 struct Spritesheet
 {
-    private TextureData tex_;
-    private uint spriteSize_;
+    TextureData tex;
+    uint spriteSize;
 
-    this(ref Graphics graphics, in string resourceName, in uint spriteSize)
+    this(ref Graphics graphics, in string resourceName, in uint spriteSz)
     {
-        tex_ = graphics.loadResource(resourceName);
+        tex = graphics.loadResource(resourceName);
         enforce(
-            (tex_.w % spriteSize == 0) && (tex_.h % spriteSize == 0),
+            (tex.w % spriteSz == 0) && (tex.h % spriteSz == 0),
             "spriteSize must be divisible by both the resource's width and height"
         );
 
-        spriteSize_ = spriteSize;
+        spriteSize = spriteSz;
     }
 
     void draw(ref Graphics graphics, in uint index, in Coord coords)
     {
         immutable src = rectForIndex(index);
         graphics.renderCopy(
-            tex_.t,
+            tex.t,
             src,
             Rect(coords.x, coords.y, src.w, src.h)
         );
@@ -34,8 +34,8 @@ struct Spritesheet
 
     private Rect rectForIndex(in uint index) @safe @nogc const pure
     {
-        immutable sx = index * spriteSize_;
-        immutable sy = sx >= tex_.w ? (sx / tex_.w) * spriteSize_ : 0;
-        return Rect(sx % tex_.w, sy, spriteSize_, spriteSize_);
+        immutable sx = index * spriteSize;
+        immutable sy = sx >= tex.w ? (sx / tex.w) * spriteSize : 0;
+        return Rect(sx % tex.w, sy, spriteSize, spriteSize);
     }
 }

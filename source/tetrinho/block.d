@@ -4,7 +4,10 @@ import accessors;
 
 import tetrinho.graphics,
        tetrinho.playfield,
+       tetrinho.spritesheet,
        tetrinho.util;
+
+import derelict.sdl2.sdl;
 
 enum BLK_WIDTH  = BOARD_WIDTH / COLS;
 enum BLK_HEIGHT = BOARD_HEIGHT / ROWS;
@@ -13,10 +16,14 @@ enum BLK_HEIGHT = BOARD_HEIGHT / ROWS;
 // everywhere since I expect these to be nullable.
 final class Block
 {
+    static Spritesheet* spritesheet_;
+
     immutable Color color;
     immutable Color lockedColor;
     Coord coords;
     bool inPiece;
+
+    private uint index_;
 
     this(in Color c, in Coord crds, in bool inP) @safe @nogc
     {
@@ -24,25 +31,44 @@ final class Block
         coords      = crds;
         inPiece     = inP;
         lockedColor = Color(c.r, c.g, c.b, 195);
+
+        index_ = indexForColor(c);
+    }
+
+    private uint indexForColor(in Color c) @safe @nogc
+    {
+        import std.traits : EnumMembers;
+
+        foreach (i, clr; EnumMembers!Colors) {
+            if (c == clr) {
+                return i;
+            }
+        }
+
+        assert(false, "given color is not a Colors member");
     }
 
     void draw(ref Graphics graphics, in Coord modifier) const
+    out { assert(spritesheet_ !is null); }
+    do
     {
-        Color clr = void;
-        if (inPiece) {
-            clr = color;
-        } else {
-            clr = lockedColor;
-            graphics.blend();
+        if (spritesheet_ is null) {
+            spritesheet_ = new Spritesheet(graphics, "blocks.png", BLK_WIDTH);
         }
 
-        graphics.renderRect(
-            clr,
-            Rect(
+        if (inPiece) {
+            SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
+        } else {
+            SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_BLEND);
+            SDL_SetTextureAlphaMod(spritesheet_.tex.t, 195);
+        }
+
+        spritesheet_.draw(
+            graphics,
+            index_,
+            Coord(
                 cast(int) (coords.x * BLK_WIDTH + modifier.x),
-                cast(int) (coords.y * BLK_HEIGHT + modifier.y),
-                BLK_WIDTH,
-                BLK_HEIGHT
+                cast(int) (coords.y * BLK_HEIGHT + modifier.y)
             )
         );
     }
