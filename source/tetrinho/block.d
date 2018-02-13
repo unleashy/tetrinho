@@ -49,8 +49,6 @@ final class Block
     }
 
     void draw(ref Graphics graphics, in Coord modifier) const
-    out { assert(spritesheet_ !is null); }
-    do
     {
         if (spritesheet_ is null) {
             spritesheet_ = new Spritesheet(graphics, "blocks.png", BLK_WIDTH);

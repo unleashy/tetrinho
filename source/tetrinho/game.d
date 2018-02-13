@@ -294,7 +294,6 @@ struct Game
         drawOverBoard("PAUSED");
     }
 
-    pragma(inline, true)
     private void drawOverBoard(in string text)
     {
         static immutable BG  = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);

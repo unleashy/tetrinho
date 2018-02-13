@@ -17,3 +17,5 @@ tetrinho-test-*
 dub.selections.json
 .vscode/
 dscanner.ini
+trace.*
+profilegc.log
