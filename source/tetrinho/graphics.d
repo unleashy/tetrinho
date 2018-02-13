@@ -72,32 +72,28 @@ struct Graphics
 
     void renderCopy(SDL_Texture* tex, in Rect dst)
     {
-        enforceSDL(
-            SDL_RenderCopy(
-                renderer_,
-                tex,
-                null,
-                &dst
-            )
+        SDL_RenderCopy(
+            renderer_,
+            tex,
+            null,
+            &dst
         );
     }
 
     void renderCopy(SDL_Texture* tex, in Rect src, in Rect dst)
     {
-        enforceSDL(
-            SDL_RenderCopy(
-                renderer_,
-                tex,
-                &src,
-                &dst
-            )
+        SDL_RenderCopy(
+            renderer_,
+            tex,
+            &src,
+            &dst
         );
     }
 
     void renderClear()
     {
         SDL_SetRenderDrawColor(renderer_, 60, 100, 175, SDL_ALPHA_OPAQUE);
-        enforceSDL(SDL_RenderClear(renderer_));
+        SDL_RenderClear(renderer_);
     }
 
     TextureData loadResource(in string name, in bool cached = true)
@@ -142,9 +138,7 @@ struct Graphics
         );
         scope(exit) SDL_FreeSurface(sfc);
 
-        return enforceSDL!"a !is null"(
-            SDL_CreateTextureFromSurface(renderer_, sfc)
-        );
+        return SDL_CreateTextureFromSurface(renderer_, sfc);
     }
 
     private TextureData fetchCache(
@@ -162,9 +156,7 @@ struct Graphics
         auto tex = elseDg(id);
 
         int texW = void, texH = void;
-        enforceSDL(
-            SDL_QueryTexture(tex, null, null, &texW, &texH)
-        );
+        SDL_QueryTexture(tex, null, null, &texW, &texH);
 
         auto texd = TextureData(tex, texW, texH);
         if (force) {
