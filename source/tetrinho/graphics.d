@@ -100,25 +100,28 @@ struct Graphics
         enforceSDL(SDL_RenderClear(renderer_));
     }
 
-    TextureData loadResource(in string name)
+    TextureData loadResource(in string name, in bool cached = true)
     {
-        return fetchCache(text("res$", name), () =>
-            enforceSDL!"a !is null"(
-                IMG_LoadTexture(renderer_, resourcePath(name).toStringz)
-            )
+        return fetchCache(name, &loadResourceUncached, !cached);
+    }
+
+    private SDL_Texture* loadResourceUncached(in string name)
+    {
+        return enforceSDL!"a !is null"(
+            IMG_LoadTexture(renderer_, resourcePath(name).toStringz)
         );
     }
 
-    void renderText(in string text, in Coord coords)
+    void renderText(in string text, in Coord coords, in bool cached = true)
     {
-        auto tex = fetchText(text);
+        auto tex = fetchText(text, cached);
         renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
     }
 
     // centers in rect
-    void renderText(in string text, in Rect rect)
+    void renderText(in string text, in Rect rect, in bool cached = true)
     {
-        auto tex = fetchText(text);
+        auto tex = fetchText(text, cached);
         immutable coords = Coord(
             rect.x + ((rect.w - tex.w) / 2),
             rect.y + ((rect.h - tex.h) / 2)
@@ -127,34 +130,48 @@ struct Graphics
         renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
     }
 
-    private TextureData fetchText(in string t)
+    private TextureData fetchText(in string t, in bool cached = true)
     {
-        return fetchCache(text("text$", t), {
-            auto sfc = enforceSDL!"a !is null"(
-                TTF_RenderText_Blended(mainFont_, t.toStringz, Colors.WHITE)
-            );
-            scope(exit) SDL_FreeSurface(sfc);
-
-            return enforceSDL!"a !is null"(
-                SDL_CreateTextureFromSurface(renderer_, sfc)
-            );
-        });
+        return fetchCache(t, &renderTextUncached, !cached);
     }
 
-    private TextureData fetchCache(in string id, SDL_Texture* delegate() elseDg)
+    private SDL_Texture* renderTextUncached(in string t)
     {
-        if (auto p = id in textureCache_) {
-            return *p;
+        auto sfc = enforceSDL!"a !is null"(
+            TTF_RenderText_Solid(mainFont_, t.toStringz, Colors.WHITE)
+        );
+        scope(exit) SDL_FreeSurface(sfc);
+
+        return enforceSDL!"a !is null"(
+            SDL_CreateTextureFromSurface(renderer_, sfc)
+        );
+    }
+
+    private TextureData fetchCache(
+        in string id,
+        SDL_Texture* delegate(string) elseDg,
+        in bool force = false
+    )
+    {
+        if (!force) {
+            if (auto p = id in textureCache_) {
+                return *p;
+            }
         }
 
-        auto tex = elseDg();
+        auto tex = elseDg(id);
 
         int texW = void, texH = void;
         enforceSDL(
             SDL_QueryTexture(tex, null, null, &texW, &texH)
         );
 
-        return textureCache_[id] = TextureData(tex, texW, texH);
+        auto texd = TextureData(tex, texW, texH);
+        if (force) {
+            return texd;
+        } else {
+            return textureCache_[id] = texd;
+        }
     }
 
     void renderRect(Color color, in Rect rect)
