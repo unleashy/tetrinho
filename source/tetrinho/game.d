@@ -301,13 +301,9 @@ struct Game
     {
         static immutable BG  = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
         static immutable CLR = Color(0, 0, 0, 170);
-        static immutable TXT = Coord(
-            (BOARD_X + BOARD_WIDTH + 100) / 2,
-            (BOARD_Y + BOARD_HEIGHT - 30) / 2
-        );
 
         graphics_.blend();
         graphics_.renderRect(CLR, BG);
-        graphics_.renderText(text, TXT);
+        graphics_.renderText(text, BG);
     }
 }

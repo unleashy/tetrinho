@@ -78,14 +78,33 @@ struct Graphics
 
     void renderText(in string text, in Coord coords)
     {
-        static immutable white = SDL_Color(255, 255, 255, SDL_ALPHA_OPAQUE);
+        auto tex = fetchText(text);
 
+        renderTextDirect(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
+    }
+
+    // centers in rect
+    void renderText(in string text, in Rect rect)
+    {
+        int textW = void, textH = void;
+        TTF_SizeText(mainFont_, text.toStringz, &textW, &textH);
+
+        immutable coords = Coord(
+            rect.x + ((rect.w - textW) / 2),
+            rect.y + ((rect.h - textH) / 2)
+        );
+
+        renderText(text, coords);
+    }
+
+    private TextCacheVal fetchText(in string text)
+    {
         TextCacheVal tex = void;
         if (auto ptr = text in textTexsCache_) {
             tex = *ptr;
         } else {
             auto sfc = enforceSDL!"a !is null"(
-                TTF_RenderText_Blended(mainFont_, text.toStringz, white)
+                TTF_RenderText_Blended(mainFont_, text.toStringz, Colors.WHITE)
             );
             scope(exit) SDL_FreeSurface(sfc);
 
@@ -102,12 +121,15 @@ struct Graphics
             textTexsCache_[text] = tex;
         }
 
-        immutable rect = SDL_Rect(coords.x, coords.y, tex.w, tex.h);
+        return tex;
+    }
 
+    private void renderTextDirect(SDL_Texture* tex, in Rect rect)
+    {
         enforceSDL(
             SDL_RenderCopy(
                 renderer_,
-                tex.t,
+                tex,
                 null,
                 &rect
             )
