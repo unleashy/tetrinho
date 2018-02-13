@@ -70,14 +70,14 @@ struct Graphics
         SDL_RenderPresent(renderer_);
     }
 
-    void renderCopy(SDL_Texture* tex, in Rect src)
+    void renderCopy(SDL_Texture* tex, in Rect dst)
     {
         enforceSDL(
             SDL_RenderCopy(
                 renderer_,
                 tex,
                 null,
-                &src
+                &dst
             )
         );
     }
@@ -88,8 +88,8 @@ struct Graphics
             SDL_RenderCopy(
                 renderer_,
                 tex,
-                &dst,
-                &src
+                &src,
+                &dst
             )
         );
     }

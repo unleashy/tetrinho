@@ -24,11 +24,11 @@ struct Spritesheet
 
     void draw(ref Graphics graphics, in uint index, in Coord coords)
     {
-        const src = rectForIndex(index);
+        immutable src = rectForIndex(index);
         graphics.renderCopy(
             tex_.t,
             src,
-            Rect(coords.tupleof, src.w, src.h)
+            Rect(coords.x, coords.y, src.w, src.h)
         );
     }
 
