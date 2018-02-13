@@ -15,10 +15,10 @@ import tetrinho.util;
 enum WINDOW_WIDTH  = 500;
 enum WINDOW_HEIGHT = 586;
 
+alias TextureData = Tuple!(SDL_Texture*, "t", int, "w", int, "h");
+
 struct Graphics
 {
-    private alias TextureData = Tuple!(SDL_Texture*, "t", int, "w", int, "h");
-
     private SDL_Window* window_;
     private SDL_Renderer* renderer_;
     private TTF_Font* mainFont_;
@@ -100,13 +100,13 @@ struct Graphics
         enforceSDL(SDL_RenderClear(renderer_));
     }
 
-    SDL_Texture* loadResource(in string name, in Coord coords)
+    TextureData loadResource(in string name)
     {
         return fetchCache(text("res$", name), () =>
             enforceSDL!"a !is null"(
                 IMG_LoadTexture(renderer_, resourcePath(name).toStringz)
             )
-        ).t;
+        );
     }
 
     void renderText(in string text, in Coord coords)

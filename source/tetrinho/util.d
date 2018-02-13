@@ -15,15 +15,16 @@ alias Color = SDL_Color;
 
 enum Colors : Color
 {
-    BLACK  = Color(  0,   0,   0, SDL_ALPHA_OPAQUE),
-    WHITE  = Color(255, 255, 255, SDL_ALPHA_OPAQUE),
     CYAN   = Color(  0, 255, 255, SDL_ALPHA_OPAQUE),
     BLUE   = Color(  0,   0, 255, SDL_ALPHA_OPAQUE),
     ORANGE = Color(255, 165,   0, SDL_ALPHA_OPAQUE),
     YELLOW = Color(255, 255,   0, SDL_ALPHA_OPAQUE),
     GREEN  = Color(  0, 255,   0, SDL_ALPHA_OPAQUE),
     PURPLE = Color(128,   0, 128, SDL_ALPHA_OPAQUE),
-    RED    = Color(255,   0,   0, SDL_ALPHA_OPAQUE)
+    RED    = Color(255,   0,   0, SDL_ALPHA_OPAQUE),
+    GRAY   = Color(128, 128, 128, SDL_ALPHA_OPAQUE),
+    BLACK  = Color(  0,   0,   0, SDL_ALPHA_OPAQUE),
+    WHITE  = Color(255, 255, 255, SDL_ALPHA_OPAQUE),
 }
 
 bool isInside(in Coord c, in Rect r) @trusted @nogc
