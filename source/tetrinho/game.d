@@ -21,15 +21,23 @@ enum KeyState
     KEY_UP
 }
 
+enum GameState
+{
+    STOPPED,
+    RUNNING,
+    PAUSED,
+    GAME_OVER
+}
+
 struct Game
 {
-    private bool running_;
+    private GameState state_;
     private Graphics graphics_;
     private Playfield playfield_;
     private Piece currentPiece_, nextPiece_;
     private Timer gravityTimer_, lockTimer_;
     private Scoreboard scoreboard_;
-    private bool pieceDropping_, gameOver_;
+    private bool pieceDropping_;
 
     static Game opCall()
     {
@@ -46,7 +54,7 @@ struct Game
 
     void run()
     {
-        running_ = true;
+        state_ = GameState.RUNNING;
 
         scoreboard_.onLevelUp((level) {
             gravityTimer_.timeout = calculateGravityTimeout(level);
@@ -61,7 +69,7 @@ struct Game
         auto previousTimeMs = SDL_GetTicks();
         auto lag = 0.0;
 
-        while (running_) {
+        while (state_ != GameState.STOPPED) {
             immutable currentTimeMs = SDL_GetTicks();
             immutable elapsedTimeMs = currentTimeMs - previousTimeMs;
             previousTimeMs = currentTimeMs;
@@ -70,7 +78,7 @@ struct Game
             while (SDL_PollEvent(&e)) {
                 switch (e.type) {
                     case SDL_QUIT:
-                        running_ = false;
+                        state_ = GameState.STOPPED;
                         break;
 
                     case SDL_KEYDOWN:
@@ -88,7 +96,7 @@ struct Game
                 }
             }
 
-            if (!running_) break;
+            if (state_ == GameState.STOPPED) break;
 
             while (lag >= MS_PER_UPDATE) {
                 update();
@@ -104,20 +112,37 @@ struct Game
         }
     }
 
-    private void handleInput(in SDL_Scancode sc, in KeyState state)
+    private void handleInput(in SDL_Scancode sc, in KeyState ks)
     {
-        if (state == KeyState.KEY_DOWN && sc == SDL_SCANCODE_ESCAPE) {
-            running_ = false;
+        if (ks == KeyState.KEY_DOWN && sc == SDL_SCANCODE_ESCAPE) {
+            state_ = GameState.STOPPED;
+            return;
         }
 
-        if (gameOver_) return;
+        final switch (state_) with (GameState) {
+            case STOPPED:
+            case GAME_OVER:
+                return;
 
-        if (state == KeyState.KEY_DOWN && sc == SDL_SCANCODE_SPACE) {
-            pieceDropping_ = true;
-            gravityTimer_.deactivate();
+            case PAUSED:
+                if (ks == KeyState.KEY_DOWN && sc == SDL_SCANCODE_P) {
+                    state_ = RUNNING;
+                }
+                return;
+
+            case RUNNING: break; // just go
         }
 
-        if (!pieceDropping_ && (state == KeyState.KEY_DOWN || state == KeyState.KEY_REPEAT)) {
+        if (ks == KeyState.KEY_DOWN) {
+            if (sc == SDL_SCANCODE_SPACE) {
+                pieceDropping_ = true;
+                gravityTimer_.deactivate();
+            } else if (sc == SDL_SCANCODE_P) {
+                state_ = GameState.PAUSED;
+            }
+        }
+
+        if (!pieceDropping_ && (ks == KeyState.KEY_DOWN || ks == KeyState.KEY_REPEAT)) {
             switch (sc) {
                 case SDL_SCANCODE_RIGHT:
                     currentPiece_.move(Coord(1, 0), playfield_);
@@ -150,7 +175,7 @@ struct Game
     {
         static immutable GRAVITY_DELTA = Coord(0, 1);
 
-        if (gameOver_) return;
+        if (state_ != GameState.RUNNING) return;
 
         if (pieceDropping_) {
             if (currentPiece_.move(GRAVITY_DELTA, playfield_)) {
@@ -199,7 +224,7 @@ struct Game
         nextPiece_.center(COLS);
 
         if (currentPiece_.anyCollision(playfield_)) {
-            gameOver_ = true;
+            state_ = GameState.GAME_OVER;
         }
     }
 
@@ -238,8 +263,10 @@ struct Game
         playfield_.draw(graphics_);
         scoreboard_.draw(graphics_);
 
-        if (gameOver_) {
+        if (state_ == GameState.GAME_OVER) {
             drawGameOver();
+        } else if (state_ == GameState.PAUSED) {
+            drawPaused();
         }
 
         // Draw next piece
@@ -261,15 +288,26 @@ struct Game
 
     private void drawGameOver()
     {
-        static immutable GAME_OVER_BG  = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
-        static immutable GAME_OVER_CLR = Color(0, 0, 0, 170);
-        static immutable GAME_OVER_TXT = Coord(
+        drawOverBoard("GAME OVER");
+    }
+
+    private void drawPaused()
+    {
+        drawOverBoard("PAUSED");
+    }
+
+    pragma(inline, true)
+    private void drawOverBoard(in string text)
+    {
+        static immutable BG  = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
+        static immutable CLR = Color(0, 0, 0, 170);
+        static immutable TXT = Coord(
             (BOARD_X + BOARD_WIDTH + 100) / 2,
             (BOARD_Y + BOARD_HEIGHT - 30) / 2
         );
 
         graphics_.blend();
-        graphics_.renderRect(GAME_OVER_CLR, GAME_OVER_BG);
-        graphics_.renderText("GAME OVER", GAME_OVER_TXT);
+        graphics_.renderRect(CLR, BG);
+        graphics_.renderText(text, TXT);
     }
 }
