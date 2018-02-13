@@ -165,12 +165,12 @@ struct Piece
     {
         static immutable BOARD_RECT = Rect(0, 0, COLS, ROWS);
 
-        foreach (const block; blocks_) {
+        foreach (ref const block; blocks_) {
             if (!block.coords.isInside(BOARD_RECT)) {
                 return true;
             }
 
-            foreach (const fblock; p) {
+            foreach (ref const fblock; p) {
                 if (block !is fblock && block.coords == fblock.coords) {
                     return true;
                 }

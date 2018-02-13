@@ -106,7 +106,7 @@ struct Playfield
         );
 
         // Blocks
-        foreach (const block; field_) {
+        foreach (const ref block; field_) {
             if (block !is null) {
                 block.draw(graphics, BOARD_COORD);
             }
@@ -115,7 +115,7 @@ struct Playfield
         // Grid
         graphics.setRenderStyle(Color(255, 255, 255, 15), SDL_BLENDMODE_BLEND);
 
-        foreach (const i; 0 .. ROWS) {
+        foreach (const ref i; 0 .. ROWS) {
             immutable yc = i * BLK_WIDTH + BOARD_Y;
             graphics.renderLine(
                 Coord(BOARD_X, yc),
@@ -123,7 +123,7 @@ struct Playfield
             );
         }
 
-        foreach (const i; 0 .. COLS) {
+        foreach (const ref i; 0 .. COLS) {
             immutable xc = i * BLK_HEIGHT + BOARD_X;
             graphics.renderLine(
                 Coord(xc, BOARD_Y),
