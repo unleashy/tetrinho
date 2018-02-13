@@ -30,6 +30,11 @@ struct Scoreboard
         ];
     }
 
+    void drop(in uint multiplier) @safe
+    {
+        score_ += multiplier;
+    }
+
     void lineClear(in uint linesCleared) @safe
     in
     {
@@ -41,11 +46,12 @@ struct Scoreboard
 
         score_      += pts * level_;
         levelScore_ += pts / 100;
-        combo_      += linesCleared;
 
         if (combo_ > 1) {
             score_ += 50 * combo_ * level_;
         }
+
+        ++combo_;
 
         if (levelScore_ >= 5 * level_) {
             levelScore_ = 0;

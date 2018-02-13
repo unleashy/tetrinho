@@ -128,7 +128,9 @@ struct Game
                     break;
 
                 case SDL_SCANCODE_DOWN:
-                    currentPiece_.move(Coord(0, 1), playfield_);
+                    if (currentPiece_.move(Coord(0, 1), playfield_)) {
+                        scoreboard_.drop(1);
+                    }
                     break;
 
                 case SDL_SCANCODE_Z:
@@ -151,7 +153,9 @@ struct Game
         if (gameOver_) return;
 
         if (pieceDropping_) {
-            if (!currentPiece_.move(GRAVITY_DELTA, playfield_)) {
+            if (currentPiece_.move(GRAVITY_DELTA, playfield_)) {
+                scoreboard_.drop(2);
+            } else {
                 pieceDropping_ = false;
                 lockTimer_.activate();
             }
@@ -204,8 +208,6 @@ struct Game
         import std.algorithm : maxElement;
 
         auto lineData = playfield_.findLines();
-        import std.stdio : stderr;
-        stderr.writeln(lineData);
         if (playfield_.remove(lineData.blocks)) {
             immutable linesCleared = lineData.rows.length;
 
