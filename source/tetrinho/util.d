@@ -2,7 +2,12 @@ module tetrinho.util;
 
 import derelict.sdl2.sdl;
 
-import std.typecons;
+import std.exception,
+       std.file,
+       std.format,
+       std.functional,
+       std.path,
+       std.typecons;
 
 alias Coord = SDL_Point;
 alias Rect  = SDL_Rect;
@@ -28,10 +33,7 @@ bool isInside(in Coord c, in Rect r) @trusted @nogc
 
 T enforceSDL(alias cmp = "a == 0", T)(T a, lazy string message = "SDL error: %s") @trusted
 {
-    import std.functional : unaryFun;
-    import std.exception  : enforce;
-    import std.format     : format;
-    import std.string     : fromStringz;
+    import std.string : fromStringz;
 
     enforce(unaryFun!(cmp)(a), format(message, fromStringz(SDL_GetError())));
 
@@ -52,3 +54,19 @@ T deepCopy(T : U[][], U)(ref T src) @safe
 
     return dest;
 }
+
+alias resourcesDir = memoize!(() @safe {
+    auto path = buildNormalizedPath(dirName(thisExePath()), "res");
+    enforce(exists(path), "The resources directory could not be found.");
+
+    return path;
+});
+
+alias resourcePath = memoize!((string name) @safe {
+    import std.conv : text;
+
+    auto path = buildNormalizedPath(resourcesDir, name);
+    enforce(exists(path), text("The resource ", name, " could not be found."));
+
+    return path;
+});

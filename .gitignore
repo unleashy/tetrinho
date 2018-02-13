@@ -2,18 +2,18 @@
 docs.json
 __dummy.html
 docs/
-tetris.so
-tetris.dylib
-tetris.dll
-tetris.a
-tetris.lib
-tetris-test-*
+tetrinho.so
+tetrinho.dylib
+tetrinho.dll
+tetrinho.a
+tetrinho.lib
+tetrinho-test-*
 *.exe
 *.o
 *.obj
 *.lst
+*.dll
 
 dub.selections.json
 .vscode/
-bin/
 dscanner.ini

@@ -230,8 +230,6 @@ struct Game
 
     private void clearLines()
     {
-        import std.algorithm : maxElement;
-
         auto lineData = playfield_.findLines();
         if (playfield_.remove(lineData.blocks)) {
             immutable linesCleared = lineData.rows.length;

@@ -1,9 +1,12 @@
 module tetrinho.graphics;
 
-import std.typecons,
-       std.string;
+import std.conv,
+       std.functional,
+       std.string,
+       std.typecons;
 
 import derelict.sdl2.sdl,
+       derelict.sdl2.image,
        derelict.sdl2.ttf,
        accessors;
 
@@ -14,18 +17,15 @@ enum WINDOW_HEIGHT = 586;
 
 struct Graphics
 {
-    private alias TextCacheVal = Tuple!(SDL_Texture*, "t", int, "w", int, "h");
+    private alias TextureData = Tuple!(SDL_Texture*, "t", int, "w", int, "h");
 
     private SDL_Window* window_;
     private SDL_Renderer* renderer_;
     private TTF_Font* mainFont_;
-    private TextCacheVal[string] textTexsCache_;
+    private TextureData[string] textureCache_;
 
     static Graphics opCall()
     {
-        import std.file : thisExePath;
-        import std.path : dirName, buildPath;
-
         Graphics g;
 
         g.window_ = enforceSDL!"a !is null"(
@@ -43,7 +43,7 @@ struct Graphics
             SDL_CreateRenderer(g.window_, -1, cast(SDL_RendererFlags) 0)
         );
 
-        immutable path = buildPath(dirName(thisExePath()), `VCR_OSD_MONO.ttf`).toStringz;
+        immutable path = resourcePath(`VCR_OSD_MONO.ttf`).toStringz();
         g.mainFont_ = enforceSDL!"a !is null"(TTF_OpenFont(path, 30));
 
         return g;
@@ -51,7 +51,7 @@ struct Graphics
 
     ~this()
     {
-        foreach (ref tex; textTexsCache_) {
+        foreach (ref tex; textureCache_) {
             SDL_DestroyTexture(tex.t);
         }
 
@@ -70,70 +70,91 @@ struct Graphics
         SDL_RenderPresent(renderer_);
     }
 
-    void renderClear()
-    {
-        setRenderClearColor();
-        enforceSDL(SDL_RenderClear(renderer_));
-    }
-
-    void renderText(in string text, in Coord coords)
-    {
-        auto tex = fetchText(text);
-
-        renderTextDirect(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
-    }
-
-    // centers in rect
-    void renderText(in string text, in Rect rect)
-    {
-        int textW = void, textH = void;
-        TTF_SizeText(mainFont_, text.toStringz, &textW, &textH);
-
-        immutable coords = Coord(
-            rect.x + ((rect.w - textW) / 2),
-            rect.y + ((rect.h - textH) / 2)
-        );
-
-        renderText(text, coords);
-    }
-
-    private TextCacheVal fetchText(in string text)
-    {
-        TextCacheVal tex = void;
-        if (auto ptr = text in textTexsCache_) {
-            tex = *ptr;
-        } else {
-            auto sfc = enforceSDL!"a !is null"(
-                TTF_RenderText_Blended(mainFont_, text.toStringz, Colors.WHITE)
-            );
-            scope(exit) SDL_FreeSurface(sfc);
-
-            auto texT = enforceSDL!"a !is null"(
-                SDL_CreateTextureFromSurface(renderer_, sfc)
-            );
-
-            int texW = void, texH = void;
-            enforceSDL(
-                SDL_QueryTexture(texT, null, null, &texW, &texH)
-            );
-
-            tex = TextCacheVal(texT, texW, texH);
-            textTexsCache_[text] = tex;
-        }
-
-        return tex;
-    }
-
-    private void renderTextDirect(SDL_Texture* tex, in Rect rect)
+    void renderCopy(SDL_Texture* tex, in Rect src)
     {
         enforceSDL(
             SDL_RenderCopy(
                 renderer_,
                 tex,
                 null,
-                &rect
+                &src
             )
         );
+    }
+
+    void renderCopy(SDL_Texture* tex, in Rect src, in Rect dst)
+    {
+        enforceSDL(
+            SDL_RenderCopy(
+                renderer_,
+                tex,
+                &dst,
+                &src
+            )
+        );
+    }
+
+    void renderClear()
+    {
+        SDL_SetRenderDrawColor(renderer_, 60, 100, 175, SDL_ALPHA_OPAQUE);
+        enforceSDL(SDL_RenderClear(renderer_));
+    }
+
+    SDL_Texture* loadResource(in string name, in Coord coords)
+    {
+        return fetchCache(text("res$", name), () =>
+            enforceSDL!"a !is null"(
+                IMG_LoadTexture(renderer_, resourcePath(name).toStringz)
+            )
+        ).t;
+    }
+
+    void renderText(in string text, in Coord coords)
+    {
+        auto tex = fetchText(text);
+        renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
+    }
+
+    // centers in rect
+    void renderText(in string text, in Rect rect)
+    {
+        auto tex = fetchText(text);
+        immutable coords = Coord(
+            rect.x + ((rect.w - tex.w) / 2),
+            rect.y + ((rect.h - tex.h) / 2)
+        );
+
+        renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
+    }
+
+    private TextureData fetchText(in string t)
+    {
+        return fetchCache(text("text$", t), {
+            auto sfc = enforceSDL!"a !is null"(
+                TTF_RenderText_Blended(mainFont_, t.toStringz, Colors.WHITE)
+            );
+            scope(exit) SDL_FreeSurface(sfc);
+
+            return enforceSDL!"a !is null"(
+                SDL_CreateTextureFromSurface(renderer_, sfc)
+            );
+        });
+    }
+
+    private TextureData fetchCache(in string id, SDL_Texture* delegate() elseDg)
+    {
+        if (auto p = id in textureCache_) {
+            return *p;
+        }
+
+        auto tex = elseDg();
+
+        int texW = void, texH = void;
+        enforceSDL(
+            SDL_QueryTexture(tex, null, null, &texW, &texH)
+        );
+
+        return textureCache_[id] = TextureData(tex, texW, texH);
     }
 
     void renderRect(Color color, in Rect rect)
@@ -168,11 +189,6 @@ struct Graphics
     void blend()
     {
         SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
-    }
-
-    private void setRenderClearColor()
-    {
-        SDL_SetRenderDrawColor(renderer_, 60, 100, 175, SDL_ALPHA_OPAQUE);
     }
 
     mixin(GenerateFieldAccessors);
