@@ -134,7 +134,7 @@ struct Graphics
     private SDL_Texture* renderTextUncached(in string t)
     {
         auto sfc = enforceSDL!"a !is null"(
-            TTF_RenderText_Solid(mainFont_, t.toStringz, Colors.WHITE)
+            TTF_RenderText_Shaded(mainFont_, t.toStringz, Colors.WHITE, Colors.BLACK)
         );
         scope(exit) SDL_FreeSurface(sfc);
 
