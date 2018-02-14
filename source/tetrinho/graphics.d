@@ -200,5 +200,12 @@ struct Graphics
         SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
     }
 
+    void destroyTexture(in string str)
+    {
+        if (auto p = str in textureCache_) {
+            SDL_DestroyTexture(p.t);
+        }
+    }
+
     mixin(GenerateFieldAccessors);
 }

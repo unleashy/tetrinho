@@ -110,6 +110,7 @@ struct Scoreboard
         }
 
         if (scoreFormatted_.needsUpdate) {
+            graphics.destroyTexture(scoreFormatted_.str);
             scoreFormatted_.set(format!"%08d"(score_));
         }
 
