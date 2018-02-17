@@ -9,7 +9,8 @@
 
     "dependencies": {
         "derelict-sdl2": "~>3.1.0-alpha.2",
-        "accessors": "~>1.2.4"
+        "accessors": "~>1.2.4",
+        "sdlang-d": "~>0.10.2"
     },
     "targetPath": "bin"
 }

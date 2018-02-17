@@ -1,0 +1,13 @@
+input {
+    right "RIGHT"
+    left  "LEFT"
+
+    rotateCCW "Z"
+    rotateCW  "X"
+
+    softDrop "DOWN"
+    hardDrop "SPACE"
+
+    pause "P"
+    quit  "ESCAPE"
+}

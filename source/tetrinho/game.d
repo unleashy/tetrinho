@@ -3,6 +3,7 @@ module tetrinho.game;
 import derelict.sdl2.sdl;
 
 import tetrinho.block,
+       tetrinho.config,
        tetrinho.graphics,
        tetrinho.piece,
        tetrinho.playfield,
@@ -32,6 +33,7 @@ enum GameState
 struct Game
 {
     private GameState state_;
+    private Config config_;
     private Graphics graphics_;
     private Playfield playfield_;
     private Piece currentPiece_, nextPiece_;
@@ -43,6 +45,7 @@ struct Game
     {
         Game g;
 
+        g.config_       = Config(resourcePath("config.sdl"));
         g.graphics_     = Graphics();
         g.playfield_    = Playfield();
         g.gravityTimer_ = new Timer(g.calculateGravityTimeout(1));
@@ -114,7 +117,7 @@ struct Game
 
     private void handleInput(in SDL_Scancode sc, in KeyState ks)
     {
-        if (ks == KeyState.KEY_DOWN && sc == SDL_SCANCODE_ESCAPE) {
+        if (ks == KeyState.KEY_DOWN && sc == config_.input.quit) {
             state_ = GameState.STOPPED;
             return;
         }
@@ -125,7 +128,7 @@ struct Game
                 return;
 
             case PAUSED:
-                if (ks == KeyState.KEY_DOWN && sc == SDL_SCANCODE_P) {
+                if (ks == KeyState.KEY_DOWN && sc == config_.input.pause) {
                     state_ = RUNNING;
                 }
                 return;
@@ -134,39 +137,27 @@ struct Game
         }
 
         if (ks == KeyState.KEY_DOWN) {
-            if (sc == SDL_SCANCODE_SPACE) {
+            if (sc == config_.input.hardDrop) {
                 pieceDropping_ = true;
                 gravityTimer_.deactivate();
-            } else if (sc == SDL_SCANCODE_P) {
+            } else if (sc == config_.input.pause) {
                 state_ = GameState.PAUSED;
             }
         }
 
         if (!pieceDropping_ && (ks == KeyState.KEY_DOWN || ks == KeyState.KEY_REPEAT)) {
-            switch (sc) {
-                case SDL_SCANCODE_RIGHT:
-                    currentPiece_.move(Coord(1, 0), playfield_);
-                    break;
-
-                case SDL_SCANCODE_LEFT:
-                    currentPiece_.move(Coord(-1, 0), playfield_);
-                    break;
-
-                case SDL_SCANCODE_DOWN:
-                    if (currentPiece_.move(Coord(0, 1), playfield_)) {
-                        scoreboard_.drop(1);
-                    }
-                    break;
-
-                case SDL_SCANCODE_Z:
-                    currentPiece_.rotateLeft(playfield_);
-                    break;
-
-                case SDL_SCANCODE_X:
-                    currentPiece_.rotateRight(playfield_);
-                    break;
-
-                default: break;
+            if (sc == config_.input.right) {
+                currentPiece_.move(Coord(1, 0), playfield_);
+            } else if (sc == config_.input.left) {
+                currentPiece_.move(Coord(-1, 0), playfield_);
+            } else if (sc == config_.input.softDrop) {
+                if (currentPiece_.move(Coord(0, 1), playfield_)) {
+                    scoreboard_.drop(1);
+                }
+            } else if (sc == config_.input.rotateCCW) {
+                currentPiece_.rotateLeft(playfield_);
+            } else if (sc == config_.input.rotateCW) {
+                currentPiece_.rotateRight(playfield_);
             }
         }
     }
