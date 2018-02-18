@@ -173,7 +173,8 @@ struct Game
                 scoreboard_.drop(2);
             } else {
                 pieceDropping_ = false;
-                lockTimer_.activate();
+                gravityTimer_.activate();
+                advancePieces();
             }
 
             goto end; // YES YES THIS IS A GOTO, WHATCHA GONNA DO ABOUT IT?
