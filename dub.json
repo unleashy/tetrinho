@@ -12,5 +12,12 @@
         "accessors": "~>1.2.4",
         "sdlang-d": "~>0.10.2"
     },
-    "targetPath": "bin"
+    "targetPath": "bin",
+
+    "lflags-windows-x86": [
+        "/SUBSYSTEM:WINDOWS:5.01"
+    ],
+    "lflags-windows-x86_64": [
+        "/SUBSYSTEM:WINDOWS:5.02"
+    ]
 }
