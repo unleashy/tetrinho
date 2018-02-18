@@ -197,7 +197,7 @@ struct Piece
 
     void center(in int n) @safe
     {
-        immutable k = blockLayout_[0].length;
+        immutable k = cast(int) blockLayout_[0].length;
 
         coord_.x = (n - k) / 2;
         injectLayout();
@@ -207,13 +207,13 @@ struct Piece
     {
         size_t i;
 
-        foreach (const ly, const row; blockLayout_) {
-            foreach (const lx, const hasBlock; row) {
+        foreach (const int ly, const row; blockLayout_) {
+            foreach (const int lx, const hasBlock; row) {
                 if (hasBlock) {
                     blocks_[i].coords.x = coord_.x + lx;
                     blocks_[i].coords.y = coord_.y + ly;
 
-                    blocks_[i].ghost.x = coord_.x + lx;
+                    blocks_[i].ghost.x  = coord_.x + lx;
 
                     ++i;
                 }
@@ -244,8 +244,8 @@ struct Piece
         void ghostInject() {
             size_t i;
 
-            foreach (const ly, const row; blockLayout_) {
-                foreach (const lx, const hasBlock; row) {
+            foreach (const int ly, const row; blockLayout_) {
+                foreach (const int lx, const hasBlock; row) {
                     if (hasBlock) {
                         blocks_[i].ghost.y = ghostY + ly;
 

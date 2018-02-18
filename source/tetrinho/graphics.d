@@ -61,7 +61,6 @@ struct Graphics
         SDL_DestroyRenderer(renderer_);
         renderer_ = null;
 
-        SDL_DestroyWindow(window_);
         window_ = null;
     }
 

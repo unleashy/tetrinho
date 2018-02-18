@@ -224,7 +224,7 @@ struct Game
     {
         auto lineData = playfield_.findLines();
         if (playfield_.remove(lineData.blocks)) {
-            immutable linesCleared = lineData.rows.length;
+            immutable linesCleared = cast(uint) lineData.rows.length;
 
             foreach (const row; lineData.rows) {
                 playfield_.gravityFrom(row, 1);
