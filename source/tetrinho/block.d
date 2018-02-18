@@ -54,19 +54,19 @@ final class Block
         }
 
         if (inPiece) {
-            if (drawGhost) {
+            if (drawGhost && ghost != coords) {
                 SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_BLEND);
 
-                if (ghost != coords) {
-                    spritesheet_.draw(
-                        graphics,
-                        7,
-                        Coord(
-                            cast(int) (ghost.x * BLK_WIDTH + modifier.x),
-                            cast(int) (ghost.y * BLK_HEIGHT + modifier.y)
-                        )
-                    );
-                }
+                spritesheet_.draw(
+                    graphics,
+                    7,
+                    Coord(
+                        cast(int) (ghost.x * BLK_WIDTH + modifier.x),
+                        cast(int) (ghost.y * BLK_HEIGHT + modifier.y)
+                    )
+                );
+
+                SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
             } else {
                 SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
             }
