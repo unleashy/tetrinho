@@ -11,3 +11,5 @@ input {
     pause "P"
     quit  "ESCAPE"
 }
+
+ghostPiece true

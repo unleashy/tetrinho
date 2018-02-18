@@ -20,6 +20,7 @@ struct Config
     }
 
     Input input;
+    bool ghostPiece = true;
 
     this(in string filename)
     {
@@ -47,5 +48,7 @@ struct Config
             mixin(inputLoad!("pause",     "P"));
             mixin(inputLoad!("quit",      "ESCAPE"));
         }
+
+        ghostPiece = rootTag.getTagValue!bool("ghostPiece", true);
     }
 }

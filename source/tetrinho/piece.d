@@ -86,6 +86,7 @@ struct Piece
             }
         }
 
+        updateGhost(p);
         return true;
     }
 
@@ -141,10 +142,13 @@ struct Piece
                 // Rollback!
                 blockLayout_ = savedLayout;
                 injectLayout();
+                return;
             }
         } else {
             curRotSt_ = calculateKey!rot(curRotSt_).to;
         }
+
+        updateGhost(p);
     }
 
     private bool tryKick(RotationState rot)(ref Playfield p) @trusted
@@ -163,10 +167,8 @@ struct Piece
 
     bool anyCollision(ref Playfield p) @safe
     {
-        static immutable BOARD_RECT = Rect(0, 0, COLS, ROWS);
-
         foreach (ref const block; blocks_) {
-            if (!block.coords.isInside(BOARD_RECT)) {
+            if (!block.coords.isInside(PLAYFIELD_RECT)) {
                 return true;
             }
 
@@ -211,8 +213,59 @@ struct Piece
                     blocks_[i].coords.x = coord_.x + lx;
                     blocks_[i].coords.y = coord_.y + ly;
 
+                    blocks_[i].ghost.x = coord_.x + lx;
+
                     ++i;
                 }
+            }
+        }
+    }
+
+    private void updateGhost(ref Playfield p) @safe
+    {
+        uint ghostY = coord_.y;
+
+        bool ghostCollision() {
+            foreach (ref const block; blocks_) {
+                if (!block.ghost.isInside(PLAYFIELD_RECT)) {
+                    return true;
+                }
+
+                foreach (ref const fblock; p) {
+                    if (!fblock.inPiece && block.ghost == fblock.coords) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        void ghostInject() {
+            size_t i;
+
+            foreach (const ly, const row; blockLayout_) {
+                foreach (const lx, const hasBlock; row) {
+                    if (hasBlock) {
+                        blocks_[i].ghost.y = ghostY + ly;
+
+                        ++i;
+                    }
+                }
+            }
+        }
+
+        while (true) {
+            ++ghostY;
+            ghostInject();
+
+            if (ghostCollision() && ghostY > 0) {
+                do {
+                    --ghostY;
+                    ghostInject();
+                } while (ghostCollision());
+
+                break;
             }
         }
     }

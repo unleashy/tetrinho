@@ -249,7 +249,7 @@ struct Game
     {
         graphics_.renderClear();
 
-        playfield_.draw(graphics_);
+        playfield_.draw(graphics_, config_.ghostPiece);
         scoreboard_.draw(graphics_);
 
         if (state_ == GameState.GAME_OVER) {
@@ -269,7 +269,7 @@ struct Game
         graphics_.renderText("NEXT", NEXT_FORMATION_TXT_COORDS);
 
         foreach (const block; nextPiece_.blocks) {
-            block.draw(graphics_, NEXT_FORMATION_COORDS);
+            block.draw(graphics_, NEXT_FORMATION_COORDS, false);
         }
 
         graphics_.renderPresent();

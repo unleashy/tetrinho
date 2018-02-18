@@ -16,11 +16,11 @@ enum BLK_HEIGHT = BOARD_HEIGHT / ROWS;
 // everywhere since I expect these to be nullable.
 final class Block
 {
-    static Spritesheet* spritesheet_;
+    private static Spritesheet* spritesheet_;
 
     immutable Color color;
-    immutable Color lockedColor;
     Coord coords;
+    Coord ghost;
     bool inPiece;
 
     private uint index_;
@@ -30,7 +30,6 @@ final class Block
         color       = c;
         coords      = crds;
         inPiece     = inP;
-        lockedColor = Color(c.r, c.g, c.b, 195);
 
         index_ = indexForColor(c);
     }
@@ -48,14 +47,29 @@ final class Block
         assert(false, "given color is not a Colors member");
     }
 
-    void draw(ref Graphics graphics, in Coord modifier) const
+    void draw(ref Graphics graphics, in Coord modifier, in bool drawGhost = true) const
     {
         if (spritesheet_ is null) {
             spritesheet_ = new Spritesheet(graphics, "blocks.png", BLK_WIDTH);
         }
 
         if (inPiece) {
-            SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
+            if (drawGhost) {
+                SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_BLEND);
+
+                if (ghost != coords) {
+                    spritesheet_.draw(
+                        graphics,
+                        7,
+                        Coord(
+                            cast(int) (ghost.x * BLK_WIDTH + modifier.x),
+                            cast(int) (ghost.y * BLK_HEIGHT + modifier.y)
+                        )
+                    );
+                }
+            } else {
+                SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
+            }
         } else {
             SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_BLEND);
             SDL_SetTextureAlphaMod(spritesheet_.tex.t, 195);

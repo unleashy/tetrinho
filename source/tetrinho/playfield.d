@@ -7,8 +7,11 @@ import tetrinho.util,
        tetrinho.block,
        tetrinho.graphics;
 
-enum ROWS    = 24;
-enum COLS    = 10;
+enum ROWS = 24;
+enum COLS = 10;
+
+immutable PLAYFIELD_RECT = Rect(0, 0, COLS, ROWS);
+
 enum BLK_QTY = ROWS * COLS;
 
 enum BOARD_X      = 255;
@@ -93,7 +96,7 @@ struct Playfield
               .each!(b => b.coords.y += dy);
     }
 
-    void draw(ref Graphics graphics) const
+    void draw(ref Graphics graphics, in bool drawGhost = true) const
     {
         import derelict.sdl2.sdl : SDL_BLENDMODE_BLEND;
 
@@ -108,7 +111,7 @@ struct Playfield
         // Blocks
         foreach (const ref block; field_) {
             if (block !is null) {
-                block.draw(graphics, BOARD_COORD);
+                block.draw(graphics, BOARD_COORD, drawGhost);
             }
         }
 
