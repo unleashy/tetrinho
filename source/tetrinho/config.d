@@ -16,6 +16,7 @@ struct Config
         SDL_Scancode softDrop  = SDL_SCANCODE_DOWN;
         SDL_Scancode hardDrop  = SDL_SCANCODE_SPACE;
         SDL_Scancode pause     = SDL_SCANCODE_P;
+        SDL_Scancode restart   = SDL_SCANCODE_R;
         SDL_Scancode quit      = SDL_SCANCODE_ESCAPE;
     }
 
@@ -46,6 +47,7 @@ struct Config
             mixin(inputLoad!("softDrop",  "DOWN"));
             mixin(inputLoad!("hardDrop",  "SPACE"));
             mixin(inputLoad!("pause",     "P"));
+            mixin(inputLoad!("restart",   "R"));
             mixin(inputLoad!("quit",      "ESCAPE"));
         }
 

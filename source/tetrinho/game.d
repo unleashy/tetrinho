@@ -27,6 +27,7 @@ enum GameState
     STOPPED,
     RUNNING,
     PAUSED,
+    RESTART,
     GAME_OVER
 }
 
@@ -57,6 +58,7 @@ struct Game
 
     void run()
     {
+    start:
         state_ = GameState.RUNNING;
 
         scoreboard_.onLevelUp((level) {
@@ -99,7 +101,9 @@ struct Game
                 }
             }
 
-            if (state_ == GameState.STOPPED) break;
+            if (state_ == GameState.STOPPED || state_ == GameState.RESTART) {
+                break;
+            }
 
             while (lag >= MS_PER_UPDATE) {
                 update();
@@ -113,17 +117,32 @@ struct Game
                 SDL_Delay((cast(Uint32) MS_PER_UPDATE) - elapsedTimeMs);
             }
         }
+
+        if (state_ == GameState.RESTART) {
+            playfield_  = Playfield();
+            scoreboard_ = Scoreboard();
+            gravityTimer_.reset();
+            lockTimer_.deactivate();
+
+            goto start; // HOLY SHIT ANOTHER GOTO THEY ARE COMPLETELY MAD!!!
+        }
     }
 
     private void handleInput(in SDL_Scancode sc, in KeyState ks)
     {
-        if (ks == KeyState.KEY_DOWN && sc == config_.input.quit) {
-            state_ = GameState.STOPPED;
-            return;
+        if (ks == KeyState.KEY_DOWN) {
+            if (sc == config_.input.quit) {
+                state_ = GameState.STOPPED;
+                return;
+            } else if (sc == config_.input.restart) {
+                state_ = GameState.RESTART;
+                return;
+            }
         }
 
         final switch (state_) with (GameState) {
             case STOPPED:
+            case RESTART:
             case GAME_OVER:
                 return;
 

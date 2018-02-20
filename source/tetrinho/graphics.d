@@ -203,6 +203,7 @@ struct Graphics
     {
         if (auto p = str in textureCache_) {
             SDL_DestroyTexture(p.t);
+            textureCache_.remove(str);
         }
     }
 
