@@ -17,11 +17,21 @@
 
     "buildTypes": {
         "debug": {
+            "buildOptions": [
+                "debugMode",
+                "debugInfo"
+            ],
             "lflags-windows-x86_64": [
                 "/ENTRY:mainCRTStartup"
             ]
         },
         "release": {
+            "buildOptions": [
+                "releaseMode",
+                "optimize",
+                "inline",
+                "debugInfo"
+            ],
             "lflags-windows-x86": [
                 "/SUBSYSTEM:WINDOWS:5.01"
             ],
