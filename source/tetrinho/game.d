@@ -5,6 +5,7 @@ import derelict.sdl2.sdl;
 import tetrinho.block,
        tetrinho.config,
        tetrinho.graphics,
+       tetrinho.highscores,
        tetrinho.piece,
        tetrinho.playfield,
        tetrinho.scoring,
@@ -37,9 +38,10 @@ struct Game
     private Config config_;
     private Graphics graphics_;
     private Playfield playfield_;
+    private Scoreboard scoreboard_;
+    private Highscores highscores_;
     private Piece currentPiece_, nextPiece_;
     private Timer gravityTimer_, lockTimer_;
-    private Scoreboard scoreboard_;
     private bool pieceDropping_;
 
     static Game opCall()
@@ -49,6 +51,7 @@ struct Game
         g.config_       = Config(resourcePath("config.sdl"));
         g.graphics_     = Graphics();
         g.playfield_    = Playfield();
+        g.highscores_   = Highscores(resourcePath("highscores.sdl"));
         g.gravityTimer_ = new Timer(g.calculateGravityTimeout(1));
         g.lockTimer_    = new Timer(LOCKING_TIMEOUT);
         g.lockTimer_.deactivate();
@@ -224,6 +227,8 @@ struct Game
 
     private void advancePieces()
     {
+        import std.datetime.systime : Clock;
+
         currentPiece_.detachBlocks();
 
         clearLines();
@@ -236,6 +241,16 @@ struct Game
 
         if (currentPiece_.anyCollision(playfield_)) {
             state_ = GameState.GAME_OVER;
+
+            highscores_.addScore(
+                Highscore(
+                    "asd",
+                    scoreboard_.score,
+                    scoreboard_.level,
+                    Clock.currTime()
+                )
+            );
+            highscores_.save(resourcePath("highscores.sdl"));
         }
     }
 

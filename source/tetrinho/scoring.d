@@ -129,4 +129,6 @@ struct Scoreboard
         graphics.renderText("COMBO", Coord(10, 65));
         graphics.renderText(comboFormatted_.str, Coord(110, 65));
     }
+
+    mixin(GenerateFieldAccessors);
 }
