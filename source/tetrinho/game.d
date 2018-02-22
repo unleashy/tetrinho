@@ -13,7 +13,6 @@ import tetrinho.block,
        tetrinho.util;
 
 enum uint MS_PER_UPDATE = 16;
-
 enum uint LOCKING_TIMEOUT = 500;
 
 enum KeyState
@@ -31,6 +30,12 @@ enum GameState
     RESTART,
     GAME_OVER
 }
+
+enum NEXT_FORMATION_COORDS = Coord(10, 230);
+enum NEXT_FORMATION_TXT_COORDS = Coord(95, 200);
+static immutable NEXT_FORMATION_BG = Rect(
+    82, NEXT_FORMATION_COORDS.y - 30, BLK_WIDTH * 4, BLK_HEIGHT * 2 + 30
+);
 
 struct Game
 {
@@ -287,24 +292,18 @@ struct Game
         playfield_.draw(graphics_, config_.ghostPiece);
         scoreboard_.draw(graphics_);
 
-        if (state_ == GameState.GAME_OVER) {
-            drawGameOver();
-        } else if (state_ == GameState.PAUSED) {
-            drawPaused();
-        }
-
         // Draw next piece
-        enum NEXT_FORMATION_COORDS = Coord(10, 230);
-        enum NEXT_FORMATION_TXT_COORDS = Coord(95, 200);
-        static immutable NEXT_FORMATION_BG = Rect(
-            82, NEXT_FORMATION_COORDS.y - 30, BLK_WIDTH * 4, BLK_HEIGHT * 2 + 30
-        );
-
         graphics_.renderRect(Colors.BLACK, NEXT_FORMATION_BG);
         graphics_.renderText("NEXT", NEXT_FORMATION_TXT_COORDS);
 
         foreach (const block; nextPiece_.blocks) {
             block.draw(graphics_, NEXT_FORMATION_COORDS, false);
+        }
+
+        if (state_ == GameState.GAME_OVER) {
+            drawGameOver();
+        } else if (state_ == GameState.PAUSED) {
+            drawPaused();
         }
 
         graphics_.renderPresent();
@@ -317,16 +316,27 @@ struct Game
 
     private void drawPaused()
     {
-        drawOverBoard("PAUSED");
+        drawOverBoard!true("PAUSED");
     }
 
-    private void drawOverBoard(in string text)
+    private void drawOverBoard(bool hideStuff = false)(in string text)
     {
-        static immutable BG  = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
-        static immutable CLR = Color(0, 0, 0, 170);
+        // this is a bit bootleg but whatever
+        static immutable NEXT_BG = Rect(
+            NEXT_FORMATION_BG.x,
+            NEXT_FORMATION_COORDS.y,
+            NEXT_FORMATION_BG.w,
+            NEXT_FORMATION_BG.h - 30
+        );
+        static immutable BG      = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
+        static immutable CLR     = Color(0, 0, 0, hideStuff ? 255 : 170);
 
         graphics_.blend();
         graphics_.renderRect(CLR, BG);
         graphics_.renderText(text, BG);
+
+        if (hideStuff) {
+            graphics_.renderRect(CLR, NEXT_BG);
+        }
     }
 }
