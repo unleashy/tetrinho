@@ -199,6 +199,27 @@ struct Graphics
         SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
     }
 
+    void blend(SDL_Texture* tex)
+    {
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+    }
+
+    void blend(SDL_Texture* tex, in ubyte alpha)
+    {
+        blend(tex);
+        SDL_SetTextureAlphaMod(tex, alpha);
+    }
+
+    void unblend()
+    {
+        SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_NONE);
+    }
+
+    void unblend(SDL_Texture* tex)
+    {
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_NONE);
+    }
+
     void destroyTexture(in string str)
     {
         if (auto p = str in textureCache_) {

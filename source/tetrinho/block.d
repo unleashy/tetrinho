@@ -53,9 +53,11 @@ final class Block
             spritesheet_ = new Spritesheet(graphics, "blocks.png", BLK_WIDTH);
         }
 
+        scope(exit) graphics.unblend(spritesheet_.tex.t);
+
         if (inPiece) {
             if (drawGhost && ghost != coords) {
-                SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_BLEND);
+                graphics.blend(spritesheet_.tex.t, 255);
 
                 spritesheet_.draw(
                     graphics,
@@ -65,14 +67,9 @@ final class Block
                         cast(int) (ghost.y * BLK_HEIGHT + modifier.y)
                     )
                 );
-
-                SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
-            } else {
-                SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_NONE);
             }
         } else {
-            SDL_SetTextureBlendMode(spritesheet_.tex.t, SDL_BLENDMODE_BLEND);
-            SDL_SetTextureAlphaMod(spritesheet_.tex.t, 195);
+            graphics.blend(spritesheet_.tex.t, 195);
         }
 
         spritesheet_.draw(
