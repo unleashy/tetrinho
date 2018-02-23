@@ -1,6 +1,7 @@
 module tetrinho.highscores;
 
-import std.algorithm,
+import core.time,
+       std.algorithm,
        std.array,
        std.datetime.systime,
        std.typecons;
@@ -12,7 +13,8 @@ struct Highscore
     string name;
     uint score;
     uint level;
-    SysTime time;
+    Duration time;
+    SysTime when;
 }
 
 struct Highscores
@@ -32,7 +34,8 @@ struct Highscores
             t.expectValue!string,
             cast(uint) t.expectAttribute!int("score"),
             cast(uint) t.expectAttribute!int("level"),
-            t.expectAttribute!SysTime("time"),
+            t.expectAttribute!Duration("time"),
+            t.expectAttribute!SysTime("when"),
         )).array.sort!(hsCmp).release;
     }
 
@@ -53,7 +56,8 @@ struct Highscores
                 [
                     new Attribute(null, "score", Value(cast(int) hs.score)),
                     new Attribute(null, "level", Value(cast(int) hs.level)),
-                    new Attribute(null, "time",  Value(hs.time))
+                    new Attribute(null, "time",  Value(hs.time)),
+                    new Attribute(null, "when",  Value(hs.when)),
                 ]
             );
         }

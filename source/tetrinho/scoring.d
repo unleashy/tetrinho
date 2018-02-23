@@ -1,5 +1,8 @@
 module tetrinho.scoring;
 
+import std.datetime.stopwatch,
+       std.format;
+
 import accessors;
 
 import tetrinho.graphics,
@@ -38,7 +41,8 @@ struct Scoreboard
 
     private LevelUpDelegate levelUpDg_;
 
-    private Formatted levelFormatted_, scoreFormatted_, comboFormatted_, highscoreFormatted_;
+    private Formatted levelFormatted_, scoreFormatted_, comboFormatted_, highscoreFormatted_,
+                      timeFormatted_ = Formatted("00:00:00");
 
     static this()
     {
@@ -100,11 +104,19 @@ struct Scoreboard
         levelUpDg_ = dg;
     }
 
+    void timeTick(in StopWatch timeSW) @safe
+    {
+        long hours, minutes, seconds;
+        timeSW.peek().split!("hours", "minutes", "seconds")(hours, minutes, seconds);
+
+        timeFormatted_.set(
+            format!"%02d:%02d:%02d"(hours, minutes, seconds)
+        );
+    }
+
     void draw(ref Graphics graphics, ref Highscores highscores)
     {
-        import std.format : format;
-
-        static immutable LEVEL_TEXT_BG = Rect(5, 5, 245, 125);
+        static immutable LEVEL_TEXT_BG = Rect(5, 5, 245, 155);
 
         if (levelFormatted_.needsUpdate) {
             levelFormatted_.set(format!"%02d"(level_));
@@ -138,6 +150,9 @@ struct Scoreboard
 
         graphics.renderText("COMBO", Coord(10, 95));
         graphics.renderText(comboFormatted_.str, Coord(110, 95));
+
+        graphics.renderText("TIME", Coord(10, 125));
+        graphics.renderText(timeFormatted_.str, Coord(110, 125));
     }
 
     mixin(GenerateFieldAccessors);

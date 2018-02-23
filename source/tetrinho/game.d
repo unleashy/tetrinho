@@ -1,6 +1,7 @@
 module tetrinho.game;
 
-import std.string,
+import std.datetime.stopwatch,
+       std.string,
        std.typecons;
 
 import derelict.sdl2.sdl;
@@ -51,7 +52,8 @@ struct Game
     private Scoreboard scoreboard_;
     private Highscores highscores_;
     private Piece currentPiece_, nextPiece_;
-    private Timer gravityTimer_, lockTimer_;
+    private Timer gravityTimer_, lockTimer_, timeTimer_;
+    private StopWatch timeSW_;
     private TextInput textInput_;
     private bool pieceDropping_;
 
@@ -63,6 +65,7 @@ struct Game
         g.graphics_     = Graphics();
         g.playfield_    = Playfield();
         g.highscores_   = Highscores(resourcePath("highscores.sdl"));
+        g.timeTimer_    = new Timer(1000); // 1000 ms = 1 second
         g.gravityTimer_ = new Timer(g.calculateGravityTimeout(1));
         g.lockTimer_    = new Timer(LOCKING_TIMEOUT);
         g.lockTimer_.deactivate();
@@ -84,6 +87,9 @@ struct Game
         nextPiece_ = generateNewPiece();
         nextPiece_.center(COLS);
         advancePieces();
+
+        assert(!timeSW_.running);
+        timeSW_.start();
 
         SDL_Event e;
         auto previousTimeMs = SDL_GetTicks();
@@ -139,6 +145,9 @@ struct Game
         }
 
         if (state_ == GameState.RESTART) {
+            timeSW_.stop();
+            timeSW_.reset();
+
             playfield_  = Playfield();
             scoreboard_ = Scoreboard();
             gravityTimer_.reset();
@@ -179,6 +188,7 @@ struct Game
                                 textInput_.data,
                                 scoreboard_.score,
                                 scoreboard_.level,
+                                timeSW_.peek(),
                                 Clock.currTime()
                             )
                         );
@@ -193,6 +203,7 @@ struct Game
             case PAUSED:
                 if (ks == KeyState.KEY_DOWN && sc == config_.input.pause) {
                     state_ = RUNNING;
+                    timeSW_.start();
                 }
                 return;
 
@@ -205,6 +216,7 @@ struct Game
                 gravityTimer_.deactivate();
             } else if (sc == config_.input.pause) {
                 state_ = GameState.PAUSED;
+                timeSW_.stop();
             }
         }
 
@@ -230,6 +242,10 @@ struct Game
         static immutable GRAVITY_DELTA = Coord(0, 1);
 
         if (state_ != GameState.RUNNING) return;
+
+        if (timeTimer_.active && timeTimer_.expired) {
+            scoreboard_.timeTick(timeSW_);
+        }
 
         if (pieceDropping_) {
             if (currentPiece_.move(GRAVITY_DELTA, playfield_)) {
@@ -280,6 +296,7 @@ struct Game
 
         if (currentPiece_.anyCollision(playfield_)) {
             state_ = GameState.GAME_OVER;
+            timeSW_.stop();
             SDL_StartTextInput();
         }
     }
