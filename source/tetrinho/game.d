@@ -315,7 +315,7 @@ struct Game
         graphics_.renderClear();
 
         playfield_.draw(graphics_, config_.ghostPiece);
-        scoreboard_.draw(graphics_);
+        scoreboard_.draw(graphics_, highscores_);
 
         // Draw next piece
         graphics_.renderRect(Colors.BLACK, NEXT_FORMATION_BG);

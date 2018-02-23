@@ -3,6 +3,7 @@ module tetrinho.scoring;
 import accessors;
 
 import tetrinho.graphics,
+       tetrinho.highscores,
        tetrinho.util;
 
 struct Scoreboard
@@ -37,7 +38,7 @@ struct Scoreboard
 
     private LevelUpDelegate levelUpDg_;
 
-    private Formatted levelFormatted_, scoreFormatted_, comboFormatted_;
+    private Formatted levelFormatted_, scoreFormatted_, comboFormatted_, highscoreFormatted_;
 
     static this()
     {
@@ -99,11 +100,11 @@ struct Scoreboard
         levelUpDg_ = dg;
     }
 
-    void draw(ref Graphics graphics)
+    void draw(ref Graphics graphics, ref Highscores highscores)
     {
         import std.format : format;
 
-        static immutable LEVEL_TEXT_BG = Rect(5, 5, 245, 90);
+        static immutable LEVEL_TEXT_BG = Rect(5, 5, 245, 125);
 
         if (levelFormatted_.needsUpdate) {
             levelFormatted_.set(format!"%02d"(level_));
@@ -112,6 +113,12 @@ struct Scoreboard
         if (scoreFormatted_.needsUpdate) {
             graphics.destroyTexture(scoreFormatted_.str);
             scoreFormatted_.set(format!"%08d"(score_));
+        }
+
+        if (highscoreFormatted_.needsUpdate) {
+            highscoreFormatted_.set(
+                format!"%08d"(highscores.highestScore.get(Highscore("", 0)).score)
+            );
         }
 
         if (comboFormatted_.needsUpdate) {
@@ -126,8 +133,11 @@ struct Scoreboard
         graphics.renderText("SCORE", Coord(10, 35));
         graphics.renderText(scoreFormatted_.str, Coord(110, 35));
 
-        graphics.renderText("COMBO", Coord(10, 65));
-        graphics.renderText(comboFormatted_.str, Coord(110, 65));
+        graphics.renderText("TOP", Coord(10, 65));
+        graphics.renderText(highscoreFormatted_.str, Coord(110, 65));
+
+        graphics.renderText("COMBO", Coord(10, 95));
+        graphics.renderText(comboFormatted_.str, Coord(110, 95));
     }
 
     mixin(GenerateFieldAccessors);

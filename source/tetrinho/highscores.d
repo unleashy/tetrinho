@@ -2,7 +2,8 @@ module tetrinho.highscores;
 
 import std.algorithm,
        std.array,
-       std.datetime.systime;
+       std.datetime.systime,
+       std.typecons;
 
 import sdlang;
 
@@ -68,8 +69,8 @@ struct Highscores
         highscores_.sort!(hsCmp);
     }
 
-    Highscore highestScore() @property @safe @nogc pure nothrow
+    Nullable!Highscore highestScore() @property @safe @nogc pure nothrow
     {
-        return highscores_[0];
+        return highscores_.empty ? typeof(return).init : nullable(highscores_[0]);
     }
 }
