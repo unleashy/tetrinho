@@ -22,6 +22,7 @@ struct Graphics
     private SDL_Window* window_;
     private SDL_Renderer* renderer_;
     private TTF_Font* mainFont_;
+    private TTF_Font* smallerFont_;
     private TextureData[string] textureCache_;
 
     static Graphics opCall()
@@ -44,7 +45,8 @@ struct Graphics
         );
 
         immutable path = resourcePath(`VCR_OSD_MONO.ttf`).toStringz();
-        g.mainFont_ = enforceSDL!"a !is null"(TTF_OpenFont(path, 30));
+        g.mainFont_    = enforceSDL!"a !is null"(TTF_OpenFont(path, 30));
+        g.smallerFont_ = enforceSDL!"a !is null"(TTF_OpenFont(path, 18));
 
         return g;
     }
@@ -107,16 +109,26 @@ struct Graphics
         );
     }
 
-    void renderText(in string text, in Coord coords, in bool cached = true)
+    void renderText(
+        in string text,
+        in Coord coords,
+        in Flag!"small" small = No.small,
+        in Flag!"cached" cached = Yes.cached
+    )
     {
-        auto tex = fetchText(text, cached);
+        auto tex = fetchText(text, small, cached);
         renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
     }
 
     // centers in rect
-    void renderText(in string text, in Rect rect, in bool cached = true)
+    void renderText(
+        in string text,
+        in Rect rect,
+        in Flag!"small" small = No.small,
+        in Flag!"cached" cached = Yes.cached
+    )
     {
-        auto tex = fetchText(text, cached);
+        auto tex = fetchText(text, small, cached);
         immutable coords = Coord(
             rect.x + ((rect.w - tex.w) / 2),
             rect.y + ((rect.h - tex.h) / 2)
@@ -125,19 +137,24 @@ struct Graphics
         renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
     }
 
-    private TextureData fetchText(in string t, in bool cached = true)
+    private TextureData fetchText(in string t, in bool small, in bool cached)
     {
-        return fetchCache(t, &renderTextUncached, !cached);
-    }
+        return fetchCache(
+            t,
+            (string t) {
+                auto sfc = enforceSDL!"a !is null"(
+                    TTF_RenderText_Blended(
+                        small ? smallerFont_ : mainFont_,
+                        t.toStringz,
+                        Colors.WHITE
+                    )
+                );
+                scope(exit) SDL_FreeSurface(sfc);
 
-    private SDL_Texture* renderTextUncached(in string t)
-    {
-        auto sfc = enforceSDL!"a !is null"(
-            TTF_RenderText_Blended(mainFont_, t.toStringz, Colors.WHITE)
+                return SDL_CreateTextureFromSurface(renderer_, sfc);
+            },
+            !cached
         );
-        scope(exit) SDL_FreeSurface(sfc);
-
-        return SDL_CreateTextureFromSurface(renderer_, sfc);
     }
 
     private TextureData fetchCache(

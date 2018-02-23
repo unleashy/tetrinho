@@ -1,11 +1,15 @@
 module tetrinho.game;
 
+import std.string,
+       std.typecons;
+
 import derelict.sdl2.sdl;
 
 import tetrinho.block,
        tetrinho.config,
        tetrinho.graphics,
        tetrinho.highscores,
+       tetrinho.input,
        tetrinho.piece,
        tetrinho.playfield,
        tetrinho.scoring,
@@ -33,9 +37,10 @@ enum GameState
 
 enum NEXT_FORMATION_COORDS = Coord(10, 230);
 enum NEXT_FORMATION_TXT_COORDS = Coord(95, 200);
-static immutable NEXT_FORMATION_BG = Rect(
+immutable NEXT_FORMATION_BG = Rect(
     82, NEXT_FORMATION_COORDS.y - 30, BLK_WIDTH * 4, BLK_HEIGHT * 2 + 30
 );
+immutable BOARD = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
 
 struct Game
 {
@@ -47,6 +52,7 @@ struct Game
     private Highscores highscores_;
     private Piece currentPiece_, nextPiece_;
     private Timer gravityTimer_, lockTimer_;
+    private TextInput textInput_;
     private bool pieceDropping_;
 
     static Game opCall()
@@ -68,6 +74,7 @@ struct Game
     {
     start:
         state_ = GameState.RUNNING;
+        SDL_StopTextInput();
 
         scoreboard_.onLevelUp((level) {
             gravityTimer_.timeout = calculateGravityTimeout(level);
@@ -87,7 +94,6 @@ struct Game
             immutable elapsedTimeMs = currentTimeMs - previousTimeMs;
             previousTimeMs = currentTimeMs;
             lag += elapsedTimeMs;
-
             while (SDL_PollEvent(&e)) {
                 switch (e.type) {
                     case SDL_QUIT:
@@ -103,6 +109,12 @@ struct Game
 
                     case SDL_KEYUP:
                         handleInput(e.key.keysym.scancode, KeyState.KEY_UP);
+                        break;
+
+                    case SDL_TEXTINPUT:
+                        if (SDL_IsTextInputActive()) {
+                            textInput_.addText(e.text.text[]);
+                        }
                         break;
 
                     default: break;
@@ -138,11 +150,13 @@ struct Game
 
     private void handleInput(in SDL_Scancode sc, in KeyState ks)
     {
+        import std.datetime.systime : Clock;
+
         if (ks == KeyState.KEY_DOWN) {
             if (sc == config_.input.quit) {
-                state_ = GameState.STOPPED;
+                state_ = state_ == GameState.GAME_OVER ? GameState.RESTART : GameState.STOPPED;
                 return;
-            } else if (sc == config_.input.restart) {
+            } else if (state_ != GameState.GAME_OVER && sc == config_.input.restart) {
                 state_ = GameState.RESTART;
                 return;
             }
@@ -151,7 +165,29 @@ struct Game
         final switch (state_) with (GameState) {
             case STOPPED:
             case RESTART:
+                return;
+
             case GAME_OVER:
+                if (SDL_IsTextInputActive() && (ks == KeyState.KEY_DOWN || ks == KeyState.KEY_REPEAT)) {
+                    if (sc == SDL_SCANCODE_BACKSPACE) {
+                        textInput_.removeLast();
+                    } else if (sc == SDL_SCANCODE_KP_ENTER || sc == SDL_SCANCODE_RETURN) {
+                        SDL_StopTextInput();
+
+                        highscores_.addScore(
+                            Highscore(
+                                textInput_.data,
+                                scoreboard_.score,
+                                scoreboard_.level,
+                                Clock.currTime()
+                            )
+                        );
+
+                        highscores_.save(resourcePath("highscores.sdl"));
+
+                        state_ = GameState.RESTART;
+                    }
+                }
                 return;
 
             case PAUSED:
@@ -232,8 +268,6 @@ struct Game
 
     private void advancePieces()
     {
-        import std.datetime.systime : Clock;
-
         currentPiece_.detachBlocks();
 
         clearLines();
@@ -246,16 +280,7 @@ struct Game
 
         if (currentPiece_.anyCollision(playfield_)) {
             state_ = GameState.GAME_OVER;
-
-            highscores_.addScore(
-                Highscore(
-                    "asd",
-                    scoreboard_.score,
-                    scoreboard_.level,
-                    Clock.currTime()
-                )
-            );
-            highscores_.save(resourcePath("highscores.sdl"));
+            SDL_StartTextInput();
         }
     }
 
@@ -311,7 +336,17 @@ struct Game
 
     private void drawGameOver()
     {
+        static immutable CENTER_RECT      = Rect(BOARD_X, BOARD_Y + 60, BOARD_WIDTH, BOARD_HEIGHT);
+        static immutable INPUT_BG_RECT    = Rect(BOARD_X + 8, 370, BOARD_WIDTH - 16, 20);
+        static immutable INPUT_OUTL_RECT  = Rect(BOARD_X + 5, 367, BOARD_WIDTH - 10, 26);
+        static immutable INPUT_TEXT_COORD = Coord(INPUT_BG_RECT.x, INPUT_BG_RECT.y);
+
         drawOverBoard("GAME OVER");
+        graphics_.renderText("Highscore name:", CENTER_RECT, Yes.small);
+        graphics_.renderRect(Colors.WHITE, INPUT_OUTL_RECT);
+        graphics_.renderRect(Colors.BLACK, INPUT_BG_RECT);
+
+        textInput_.draw(graphics_, INPUT_TEXT_COORD);
     }
 
     private void drawPaused()
@@ -328,14 +363,13 @@ struct Game
             NEXT_FORMATION_BG.w,
             NEXT_FORMATION_BG.h - 30
         );
-        static immutable BG      = Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
-        static immutable CLR     = Color(0, 0, 0, hideStuff ? 255 : 170);
+        static immutable CLR = Color(0, 0, 0, hideStuff ? 255 : 170);
 
         graphics_.blend();
-        graphics_.renderRect(CLR, BG);
-        graphics_.renderText(text, BG);
+        graphics_.renderRect(CLR, BOARD);
+        graphics_.renderText(text, BOARD);
 
-        if (hideStuff) {
+        static if (hideStuff) {
             graphics_.renderRect(CLR, NEXT_BG);
         }
     }
