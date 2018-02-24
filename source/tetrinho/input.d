@@ -1,7 +1,6 @@
 module tetrinho.input;
 
-import std.array,
-       std.typecons;
+import std.array;
 
 import derelict.sdl2.sdl;
 
@@ -32,7 +31,7 @@ struct TextInput
     {
         auto d = data;
         if (d.length > 0) {
-            g.renderText(d, coord, Yes.small);
+            g.renderText(d, coord, FontSize.SMALL);
         }
     }
 

@@ -17,12 +17,18 @@ enum WINDOW_HEIGHT = 586;
 
 alias TextureData = Tuple!(SDL_Texture*, "t", int, "w", int, "h");
 
+enum FontSize
+{
+    NORMAL,
+    SMALL,
+    TINY
+}
+
 struct Graphics
 {
     private SDL_Window* window_;
     private SDL_Renderer* renderer_;
-    private TTF_Font* mainFont_;
-    private TTF_Font* smallerFont_;
+    private TTF_Font* mainFont_, smallFont_, tinyFont_;
     private TextureData[string] textureCache_;
 
     static Graphics opCall()
@@ -45,8 +51,9 @@ struct Graphics
         );
 
         immutable path = resourcePath(`VCR_OSD_MONO.ttf`).toStringz();
-        g.mainFont_    = enforceSDL!"a !is null"(TTF_OpenFont(path, 30));
-        g.smallerFont_ = enforceSDL!"a !is null"(TTF_OpenFont(path, 18));
+        g.mainFont_  = enforceSDL!"a !is null"(TTF_OpenFont(path, 30));
+        g.smallFont_ = enforceSDL!"a !is null"(TTF_OpenFont(path, 18));
+        g.tinyFont_  = enforceSDL!"a !is null"(TTF_OpenFont(path, 15));
 
         return g;
     }
@@ -59,6 +66,12 @@ struct Graphics
 
         TTF_CloseFont(mainFont_);
         mainFont_ = null;
+
+        TTF_CloseFont(smallFont_);
+        smallFont_ = null;
+
+        TTF_CloseFont(tinyFont_);
+        tinyFont_ = null;
 
         SDL_DestroyRenderer(renderer_);
         renderer_ = null;
@@ -112,11 +125,11 @@ struct Graphics
     void renderText(
         in string text,
         in Coord coords,
-        in Flag!"small" small = No.small,
+        in FontSize fontSize = FontSize.NORMAL,
         in Flag!"cached" cached = Yes.cached
     )
     {
-        auto tex = fetchText(text, small, cached);
+        auto tex = fetchText(text, fontSize, cached);
         renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
     }
 
@@ -124,11 +137,11 @@ struct Graphics
     void renderText(
         in string text,
         in Rect rect,
-        in Flag!"small" small = No.small,
+        in FontSize fontSize = FontSize.NORMAL,
         in Flag!"cached" cached = Yes.cached
     )
     {
-        auto tex = fetchText(text, small, cached);
+        auto tex = fetchText(text, fontSize, cached);
         immutable coords = Coord(
             rect.x + ((rect.w - tex.w) / 2),
             rect.y + ((rect.h - tex.h) / 2)
@@ -137,14 +150,14 @@ struct Graphics
         renderCopy(tex.t, Rect(coords.x, coords.y, tex.w, tex.h));
     }
 
-    private TextureData fetchText(in string t, in bool small, in bool cached)
+    private TextureData fetchText(in string t, in FontSize fontSize, in bool cached)
     {
         return fetchCache(
             t,
             (string t) {
                 auto sfc = enforceSDL!"a !is null"(
                     TTF_RenderText_Blended(
-                        small ? smallerFont_ : mainFont_,
+                        fontForSize(fontSize),
                         t.toStringz,
                         Colors.WHITE
                     )
@@ -155,6 +168,15 @@ struct Graphics
             },
             !cached
         );
+    }
+
+    private TTF_Font* fontForSize(in FontSize fontSize) @safe @nogc nothrow pure
+    {
+        final switch (fontSize) with (FontSize) {
+            case NORMAL: return mainFont_;
+            case SMALL: return smallFont_;
+            case TINY: return tinyFont_;
+        }
     }
 
     private TextureData fetchCache(

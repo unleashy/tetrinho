@@ -3,6 +3,7 @@ module tetrinho.util;
 import derelict.sdl2.sdl;
 
 import std.exception,
+       std.datetime.systime,
        std.file,
        std.format,
        std.functional,
@@ -71,3 +72,67 @@ alias resourcePath = memoize!((string name) @safe {
 
     return path;
 });
+
+string truncate(in string what, in size_t len, in string dots = "...") @safe
+{
+    if (what.length > len) {
+        return what[0 .. (len - dots.length)] ~ dots;
+    }
+
+    return what;
+}
+
+string agoString(in SysTime time) @safe
+{
+    import std.conv : text;
+
+    enum difOut(string name) =
+        `if (dif == 1) {
+            return "1 ` ~ name ~ ` ago";
+        } else {
+            return text(dif, " ` ~ name ~ `s ago");
+        }`;
+
+    immutable curTime = Clock.currTime();
+
+    // Years and months testing
+    if (time > curTime) {
+        return "FUUUUTURE!"; // sponge bob memes
+    } else if (time == curTime) {
+        return "just now"; // this will probably never happen but
+    } else if (auto dif = curTime.year - time.year) {
+        // neat trick in the condition: if dif == 0, its the same year;
+        // 0 autoconverts to false, ignoring this, which is what we want!
+
+        // do this manually due to exception in branching
+        if (dif == 1) {
+            return "1 yr ago";
+        } else if (dif >= curTime.year) {
+            return "many yrs ago";
+        } else {
+            return text(dif, " yrs ago");
+        }
+    } else if (auto dif = curTime.month - time.month) {
+        // same trick
+        mixin(difOut!"month");
+    }
+
+    // deal with duration normally
+    immutable difs = (curTime - time).split();
+
+    if (auto dif = difs.weeks) {
+        mixin(difOut!"week");
+    } else if (auto dif = difs.days) {
+        mixin(difOut!"day");
+    } else if (auto dif = difs.hours) {
+        mixin(difOut!"hour");
+    } else if (auto dif = difs.minutes) {
+        mixin(difOut!"min");
+    } else if (auto dif = difs.seconds) {
+        if (dif > 5) {
+            return text(dif, " secs ago");
+        }
+    }
+
+    return "just now";
+}

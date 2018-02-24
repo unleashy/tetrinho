@@ -32,6 +32,7 @@ enum GameState
     STOPPED,
     RUNNING,
     PAUSED,
+    HIGHSCORES,
     RESTART,
     GAME_OVER
 }
@@ -207,6 +208,14 @@ struct Game
                 }
                 return;
 
+            case HIGHSCORES:
+                if (ks == KeyState.KEY_DOWN && sc == config_.input.highscores) {
+                    state_ = RUNNING;
+                    highscores_.clearHighscoreFormatCache();
+                    timeSW_.start();
+                }
+                return;
+
             case RUNNING: break; // just go
         }
 
@@ -217,6 +226,11 @@ struct Game
             } else if (sc == config_.input.pause) {
                 state_ = GameState.PAUSED;
                 timeSW_.stop();
+                return;
+            } else if (sc == config_.input.highscores) {
+                state_ = GameState.HIGHSCORES;
+                timeSW_.stop();
+                return;
             }
         }
 
@@ -330,6 +344,12 @@ struct Game
     private void draw()
     {
         graphics_.renderClear();
+        scope(exit) graphics_.renderPresent();
+
+        if (state_ == GameState.HIGHSCORES) {
+            drawHighscores();
+            return;
+        }
 
         playfield_.draw(graphics_, config_.ghostPiece);
         scoreboard_.draw(graphics_, highscores_);
@@ -347,8 +367,6 @@ struct Game
         } else if (state_ == GameState.PAUSED) {
             drawPaused();
         }
-
-        graphics_.renderPresent();
     }
 
     private void drawGameOver()
@@ -359,7 +377,7 @@ struct Game
         static immutable INPUT_TEXT_COORD = Coord(INPUT_BG_RECT.x, INPUT_BG_RECT.y);
 
         drawOverBoard("GAME OVER");
-        graphics_.renderText("Highscore name:", CENTER_RECT, Yes.small);
+        graphics_.renderText("Highscore name:", CENTER_RECT, FontSize.SMALL);
         graphics_.renderRect(Colors.WHITE, INPUT_OUTL_RECT);
         graphics_.renderRect(Colors.BLACK, INPUT_BG_RECT);
 
@@ -369,6 +387,11 @@ struct Game
     private void drawPaused()
     {
         drawOverBoard!true("PAUSED");
+    }
+
+    private void drawHighscores()
+    {
+        highscores_.draw(graphics_);
     }
 
     private void drawOverBoard(bool hideStuff = false)(in string text)

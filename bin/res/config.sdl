@@ -8,9 +8,10 @@ input {
     softDrop "DOWN"
     hardDrop "SPACE"
 
-    pause   "P"
-    restart "R"
-    quit    "ESCAPE"
+    pause      "P"
+    restart    "R"
+    highscores "H"
+    quit       "ESCAPE"
 }
 
 ghostPiece true
